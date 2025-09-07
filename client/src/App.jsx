@@ -12,6 +12,9 @@ import ResultsPage from './pages/ResultsPage'
 import DetailedReportPage from './pages/DetailedReportPage'
 import DashboardPage from './pages/DashboardPage'
 import TechnologiesPage from './pages/TechnologiesPage'
+import PremiumPage from './pages/PremiumPage'
+import CheckoutPage from './pages/CheckoutPage'
+import PaymentSuccessPage from './pages/PaymentSuccessPage'
 import HelpCenterPage from './pages/HelpCenterPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import NetworkBanner from './components/NetworkBanner'
@@ -40,6 +43,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/technologies" element={<TechnologiesPage />} />
+          <Route path="/premium" element={<PremiumPage />} />
           <Route path="/help" element={<HelpCenterPage />} />
 
           <Route
@@ -58,6 +62,15 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/checkout/:planId"
+            element={
+              <ProtectedRoute>
+                <CheckoutPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/payment-success" element={<PaymentSuccessPage />} />
           <Route
             path="/results/:id"
             element={

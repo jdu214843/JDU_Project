@@ -82,3 +82,14 @@ export async function getAnalysis(id) {
   const { data } = await api.get(`/analyses/${id}`)
   return data
 }
+
+// Orders
+export async function createOrder(payload) {
+  const { data } = await api.post('/orders', payload)
+  return data
+}
+
+export async function getAnalysisHistory(id) {
+  const { data } = await api.get(`/analyses/${id}/history`)
+  return data
+}

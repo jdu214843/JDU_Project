@@ -7,6 +7,8 @@ import { ensureUploadsDir, publicUploadPath } from './util/uploads.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import analysisRoutes from './routes/analyses.js';
+import orderRoutes from './routes/orders.js';
+import subscriptionRoutes from './routes/subscriptions.js';
 
 // Load env
 dotenv.config();
@@ -30,6 +32,8 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/analyses', analysisRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 // Health
 app.get('/api/health', (req, res) => {

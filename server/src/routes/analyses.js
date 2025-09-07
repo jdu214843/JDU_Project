@@ -4,7 +4,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { authRequired } from '../middleware/auth.js';
 import { uploadsDir } from '../util/uploads.js';
-import { createAnalysis, listAnalyses, getAnalysisById } from '../controllers/analysis.controller.js';
+import { createAnalysis, listAnalyses, getAnalysisById, getAnalysisHistory } from '../controllers/analysis.controller.js';
 
 const router = Router();
 
@@ -29,5 +29,6 @@ const upload = multer({ storage, fileFilter, limits: { files: 5, fileSize: 8 * 1
 router.post('/', authRequired, upload.array('images', 5), createAnalysis);
 router.get('/', authRequired, listAnalyses);
 router.get('/:id', authRequired, getAnalysisById);
+router.get('/:id/history', authRequired, getAnalysisHistory);
 
 export default router;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Paper, Typography, Tabs, Tab, Alert } from '@mui/material'
+import { Container, Box, Card, CardContent, Typography, Tabs, Tab, Alert, Avatar, Chip } from '@mui/material'
 import useAuthStore from '../store/auth'
 import { getMe } from '../services/api'
 import Loader from '../components/Loader'
@@ -31,28 +31,43 @@ export default function DashboardPage() {
 
   if (loading) return <Loader />
   return (
-    <Paper elevation={0} sx={{ p: 3 }}>
-      <Typography variant="h5" fontWeight={600} gutterBottom>Dashboard</Typography>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      <Tabs value={tab} onChange={(_,v)=>setTab(v)} sx={{ mb: 2 }}>
-        <Tab label="Profile" />
-        <Tab label="Tarix" />
-        <Tab label="Sozlamalar" />
-        <Tab label="Maxfiylik" />
-      </Tabs>
 
-      {tab === 0 && (
-        <ProfileTab user={user} onUpdated={setUser} />
-      )}
-      {tab === 1 && (
-        <HistoryTab />
-      )}
-      {tab === 2 && (
-        <SettingsTab user={user} onUpdated={setUser} />
-      )}
-      {tab === 3 && (
-        <PrivacyTab />
-      )}
-    </Paper>
+      {/* User Header */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+        <Avatar sx={{ width: 72, height: 72, mb: 1 }}>
+          {(user?.fullName || 'U')[0]}
+        </Avatar>
+        <Typography variant="h5" fontWeight={600}>{user?.fullName || 'Foydalanuvchi'}</Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>{user?.email}</Typography>
+        <Chip label="Farmer" color="success" size="small" sx={{ mt: 1 }} />
+      </Box>
+
+      {/* Tabs Card */}
+      <Card>
+        <CardContent sx={{ pt: 2 }}>
+          <Tabs value={tab} onChange={(_,v)=>setTab(v)} sx={{ mb: 2 }}>
+            <Tab label="Profile" />
+            <Tab label="Tarix" />
+            <Tab label="Sozlamalar" />
+            <Tab label="Maxfiylik" />
+          </Tabs>
+
+          {tab === 0 && (
+            <ProfileTab user={user} onUpdated={setUser} />
+          )}
+          {tab === 1 && (
+            <HistoryTab />
+          )}
+          {tab === 2 && (
+            <SettingsTab user={user} onUpdated={setUser} />
+          )}
+          {tab === 3 && (
+            <PrivacyTab />
+          )}
+        </CardContent>
+      </Card>
+    </Container>
   )
 }

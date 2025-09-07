@@ -1,14 +1,28 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { Box, Paper, Typography, Tabs, Tab, Grid, Card, CardContent, List, ListItem, ListItemText, Alert } from '@mui/material'
+import { useNavigate, useParams } from 'react-router-dom'
+import { Box, Paper, Typography, Tabs, Tab, Grid, Card, CardContent, List, ListItem, ListItemText, Alert, Button, Chip, LinearProgress } from '@mui/material'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import ShareIcon from '@mui/icons-material/Share'
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
+import OpacityIcon from '@mui/icons-material/Opacity'
+import WaterDropIcon from '@mui/icons-material/WaterDrop'
+import SmartToyIcon from '@mui/icons-material/SmartToy'
+import BoltIcon from '@mui/icons-material/Bolt'
+import WbSunnyIcon from '@mui/icons-material/WbSunny'
+import CloudIcon from '@mui/icons-material/Cloud'
+import CloudQueueIcon from '@mui/icons-material/CloudQueue'
 import { getAnalysis } from '../services/api'
 import Loader from '../components/Loader'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, LineChart, Line, CartesianGrid, Legend } from 'recharts'
+import ReportHistoryTab from '../components/reports/ReportHistoryTab'
+import ReportCompositionTab from '../components/reports/ReportCompositionTab'
+import SummaryCard from '../components/reports/SummaryCard'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28']
 
 export default function DetailedReportPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [tab, setTab] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -49,91 +63,121 @@ export default function DetailedReportPage() {
     ]
   }, [data])
 
-  const historyData = useMemo(() => {
-    // mock time series for moisture dynamics
-    const base = data?.moisture_percentage || 30
-    return Array.from({ length: 10 }).map((_, i) => ({ day: `Day ${i+1}`, moisture: Math.max(10, Math.min(60, Math.round(base + (Math.sin(i/2)*5)))) }))
+  // Helpers
+  const salinitySeverity = useMemo(() => {
+    const s = Number(data?.salinity_level || 0)
+    if (s >= 2.5) return { label: "Yuqori sho'rlangan", color: 'error' }
+    if (s >= 1.5) return { label: "O'rtacha sho'rlangan", color: 'warning' }
+    return { label: 'Past sho\'rlanish', color: 'success' }
   }, [data])
+
+  const weatherIcon = (cond) => {
+    if (cond === 'Quyoshli') return <WbSunnyIcon color="warning" />
+    if (cond === 'Yomg‘irli') return <OpacityIcon color="primary" />
+    if (cond === 'Bulutli') return <CloudIcon color="action" />
+    return <CloudQueueIcon color="action" />
+  }
 
   if (loading) return <Loader />
   if (error) return <Alert severity="error">{error}</Alert>
 
   return (
     <Paper elevation={0} sx={{ p: 3 }}>
-      <Typography variant="h5" fontWeight={600} gutterBottom>Detailed Report</Typography>
-      <Typography variant="body2" color="text.secondary" gutterBottom>Analysis ID: {data.id}</Typography>
+      {/* Header */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, gap: 2, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Button onClick={() => navigate(-1)} startIcon={<ArrowBackIcon />} sx={{ textTransform: 'none' }}>Orqaga</Button>
+          <Typography variant="h5" fontWeight={700}>Batafsil hisobot</Typography>
+          <Typography variant="body2" color="text.secondary">ID: {data.id}</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button variant="outlined" startIcon={<ShareIcon />} sx={{ textTransform: 'none' }}>Ulashish</Button>
+          <Button variant="outlined" startIcon={<PictureAsPdfIcon />} sx={{ textTransform: 'none' }}>PDF yuklab olish</Button>
+        </Box>
+      </Box>
+
+      {/* Summary cards */}
+      <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid item xs={12} md={3}>
+          <SummaryCard title="Sho'rlanish darajasi" value={`${data.salinity_level ?? '—'}%`} subtitle={salinitySeverity.label} icon={<WaterDropIcon />} color="#1976d2" />
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <SummaryCard title="AI ishonch" value={`${data.ai_confidence ?? '—'}%`} subtitle="Model ishonch darajasi" icon={<SmartToyIcon />} color="#2e7d32" />
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <SummaryCard title="pH darajasi" value={data.ph_level ?? '—'} subtitle="Kimyoviy ko'rsatkich" icon={<BoltIcon />} color="#6a1b9a" />
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <SummaryCard title="Namlik" value={`${data.moisture_percentage ?? '—'}%`} subtitle="Tuproq namligi" icon={<OpacityIcon />} color="#f9a825" />
+        </Grid>
+      </Grid>
+
+      {/* Tabs */}
       <Tabs value={tab} onChange={(_,v)=>setTab(v)} sx={{ mb: 2 }}>
-        <Tab label="General" />
-        <Tab label="Composition" />
-        <Tab label="Recommendations" />
-        <Tab label="History" />
+        <Tab label="Umumiy" />
+        <Tab label="Tarkib" />
+        <Tab label="Tavsiyalar" />
+        <Tab label="AI tahlili" />
+        <Tab label="Tarix" />
       </Tabs>
 
       {tab === 0 && (
         <Grid container spacing={2}>
+          {/* Left: Location & Weather */}
           <Grid item xs={12} md={6}>
-            <Card><CardContent>
-              <Typography variant="h6">Location Info</Typography>
-              <List>
-                <ListItem><ListItemText primary="Location" secondary={data.location || '—'} /></ListItem>
-                <ListItem><ListItemText primary="Area (ha)" secondary={data.area || '—'} /></ListItem>
-                <ListItem><ListItemText primary="Soil Type" secondary={data.soil_type || '—'} /></ListItem>
-                <ListItem><ListItemText primary="Crop Type" secondary={data.crop_type || '—'} /></ListItem>
-                <ListItem><ListItemText primary="Irrigation" secondary={data.irrigation_method || '—'} /></ListItem>
-              </List>
-            </CardContent></Card>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Lokatsiya ma'lumotlari</Typography>
+                <Grid container spacing={1} sx={{ mb: 2 }}>
+                  <Grid item xs={12}>
+                    <List dense>
+                      <ListItem><ListItemText primary="Manzil" secondary={data.location || '—'} /></ListItem>
+                      <ListItem><ListItemText primary="Maydon" secondary={data.area ? `${data.area} ha` : '—'} /></ListItem>
+                      <ListItem><ListItemText primary="Balandlik" secondary={'—'} /></ListItem>
+                      <ListItem><ListItemText primary="Koordinatalar" secondary={'—'} /></ListItem>
+                    </List>
+                  </Grid>
+                </Grid>
+                <Typography variant="subtitle1" gutterBottom>Ob-havo sharoiti</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  {weatherIcon(data?.weather?.condition)}
+                  <Typography variant="body2" color="text.secondary">
+                    {data?.weather?.condition || '—'} | Harorat: {data?.weather?.temperature ?? '—'}°C, Shamol: {data?.weather?.wind_speed ?? '—'} km/soat, Namlik: {data?.weather?.humidity ?? '—'}%
+                  </Typography>
+                </Box>
+              </CardContent>
+            </Card>
           </Grid>
+
+          {/* Right: Salinity Analysis */}
           <Grid item xs={12} md={6}>
-            <Card><CardContent>
-              <Typography variant="h6">Weather (Mock)</Typography>
-              <List>
-                <ListItem><ListItemText primary="Temperature" secondary="26°C" /></ListItem>
-                <ListItem><ListItemText primary="Humidity" secondary="68%" /></ListItem>
-                <ListItem><ListItemText primary="Rainfall" secondary="2.3 mm" /></ListItem>
-                <ListItem><ListItemText primary="Wind" secondary="8 km/h" /></ListItem>
-              </List>
-            </CardContent></Card>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Sho'rlanish tahlili</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                  <Chip label={`${data.salinity_level ?? '—'}% - ${salinitySeverity.label}`} color={salinitySeverity.color} />
+                  {data?.risk_level && <Chip label={`Xavf darajasi: ${data.risk_level}`} color={salinitySeverity.color} variant="outlined" />}
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  Ta'sirlangan hudud: {data?.affected_area_percentage ?? '—'}%
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  Sho'rlanish darajasi: {data?.salinity_level ?? '—'}%
+                </Typography>
+                <Box sx={{ mt: 1 }}>
+                  <LinearProgress variant="determinate" value={Math.min(100, Math.max(0, Math.round(((Number(data?.salinity_level) || 0) / 5) * 100)))} />
+                </Box>
+              </CardContent>
+            </Card>
           </Grid>
         </Grid>
       )}
 
       {tab === 1 && (
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <Card><CardContent>
-              <Typography variant="h6">Soil Composition</Typography>
-              <Box sx={{ height: 260 }}>
-                <ResponsiveContainer>
-                  <PieChart>
-                    <Pie data={compData} dataKey="value" nameKey="name" label>
-                      {compData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </Box>
-            </CardContent></Card>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Card><CardContent>
-              <Typography variant="h6">Chemical Properties</Typography>
-              <Box sx={{ height: 260 }}>
-                <ResponsiveContainer>
-                  <BarChart data={chemData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="value" fill="#28a745" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Box>
-            </CardContent></Card>
-          </Grid>
-        </Grid>
+        <ReportCompositionTab
+          soilComposition={data?.soil_composition}
+          chemicalProperties={data?.chemical_properties}
+        />
       )}
 
       {tab === 2 && (
@@ -151,21 +195,13 @@ export default function DetailedReportPage() {
 
       {tab === 3 && (
         <Card><CardContent>
-          <Typography variant="h6" gutterBottom>Moisture Trend</Typography>
-          <Box sx={{ height: 300 }}>
-            <ResponsiveContainer>
-              <LineChart data={historyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="day" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="moisture" stroke="#28a745" />
-              </LineChart>
-            </ResponsiveContainer>
-          </Box>
+          <Typography variant="h6" gutterBottom>AI tahlili</Typography>
+          <Typography variant="body2" color="text.secondary">AI ishonch: {data?.ai_confidence ?? '—'}%</Typography>
+          <Typography variant="body2" color="text.secondary">Xavf darajasi: {data?.risk_level ?? '—'}</Typography>
         </CardContent></Card>
       )}
+
+      {tab === 4 && <ReportHistoryTab analysisId={id} />}
     </Paper>
   )
 }

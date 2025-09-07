@@ -1,5 +1,8 @@
-import React, { useState, useMemo } from 'react'
-import { Grid, TextField, Button, MenuItem, Alert } from '@mui/material'
+import React, { useState } from 'react'
+import { Card, CardContent, Box, Grid, TextField, Button, MenuItem, Alert, Typography, InputAdornment } from '@mui/material'
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
+import SaveIcon from '@mui/icons-material/Save'
+import LocationOnIcon from '@mui/icons-material/LocationOn'
 import { updateMe } from '../../services/api'
 
 const REGIONS = [
@@ -37,32 +40,86 @@ export default function ProfileTab({ user, onUpdated }) {
   }
 
   return (
-    <>
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mb: 2 }}>Profile updated</Alert>}
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
-          <TextField label="Ism Familiya" value={form.fullName} onChange={(e)=>setForm({...form, fullName: e.target.value})} fullWidth />
+    <Card elevation={1} sx={{ bgcolor: '#fff' }}>
+      <CardContent>
+        {/* Title with icon */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <PersonOutlineIcon color="action" />
+          <Typography variant="h6" fontWeight={600}>Profil Ma'lumotlari</Typography>
+        </Box>
+
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {success && <Alert severity="success" sx={{ mb: 2 }}>Profile updated</Alert>}
+
+        {/* Two-column form layout */}
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="To'liq ism"
+              value={form.fullName}
+              onChange={(e)=>setForm({...form, fullName: e.target.value})}
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Email manzil"
+              value={form.email}
+              fullWidth
+              disabled
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Telefon raqam"
+              value={form.phoneNumber}
+              onChange={(e)=>setForm({...form, phoneNumber: e.target.value})}
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Viloyatingizni tanlang"
+              select
+              value={form.region}
+              onChange={(e)=>setForm({...form, region: e.target.value})}
+              fullWidth
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LocationOnIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
+            >
+              {REGIONS.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+            </TextField>
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Bio"
+              value={form.bio}
+              onChange={(e)=>setForm({...form, bio: e.target.value})}
+              fullWidth
+              multiline
+              rows={4}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+              <Button
+                variant="contained"
+                startIcon={<SaveIcon />}
+                onClick={handleSave}
+                disabled={saving}
+                sx={{ backgroundColor: '#212529', '&:hover': { backgroundColor: '#1b1f22' } }}
+              >
+                {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+              </Button>
+            </Box>
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={6}>
-          <TextField label="Email" value={form.email} fullWidth disabled />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <TextField label="Telefon" value={form.phoneNumber} onChange={(e)=>setForm({...form, phoneNumber: e.target.value})} fullWidth />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <TextField label="Hudud" select value={form.region} onChange={(e)=>setForm({...form, region: e.target.value})} fullWidth>
-            {REGIONS.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
-          </TextField>
-        </Grid>
-        <Grid item xs={12}>
-          <TextField label="Bio" value={form.bio} onChange={(e)=>setForm({...form, bio: e.target.value})} fullWidth multiline minRows={3} />
-        </Grid>
-        <Grid item xs={12}>
-          <Button variant="contained" onClick={handleSave} disabled={saving}>{saving ? 'Saqlanmoqda...' : 'Saqlash'}</Button>
-        </Grid>
-      </Grid>
-    </>
+      </CardContent>
+    </Card>
   )
 }
-

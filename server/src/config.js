@@ -7,9 +7,9 @@ export const config = {
   dbUrl: process.env.DATABASE_URL,
   jwtSecret: process.env.JWT_SECRET || 'change_me',
   uploadsDir: process.env.UPLOADS_DIR || 'uploads',
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
 };
 
 if (!config.dbUrl) {
   console.warn('DATABASE_URL is not set. Set it in .env');
 }
-

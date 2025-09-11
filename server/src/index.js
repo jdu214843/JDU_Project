@@ -9,6 +9,7 @@ import userRoutes from './routes/users.js';
 import analysisRoutes from './routes/analyses.js';
 import orderRoutes from './routes/orders.js';
 import subscriptionRoutes from './routes/subscriptions.js';
+import publicRoutes from './routes/public.js';
 
 // Load env
 dotenv.config();
@@ -34,6 +35,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/analyses', analysisRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/public', publicRoutes);
 
 // Health
 app.get('/api/health', (req, res) => {

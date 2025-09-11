@@ -1,11 +1,13 @@
 import React from 'react'
-import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material'
+import { AppBar, Toolbar, Typography, Button, Box, Select, MenuItem } from '@mui/material'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/auth'
+import { useI18n } from '../i18n'
 
 export default function Navbar() {
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
+  const { locale, setLocale, t } = useI18n()
 
   const handleLogout = () => {
     logout()
@@ -19,22 +21,26 @@ export default function Navbar() {
           EcoSoil
         </Typography>
         <Box sx={{ flexGrow: 1 }} />
-        <Button component={RouterLink} to="/technologies" color="inherit">Technologies</Button>
-        <Button component={RouterLink} to="/help" color="inherit">Help</Button>
+        <Button component={RouterLink} to="/technologies" color="inherit">{t('nav.technologies')}</Button>
+        <Button component={RouterLink} to="/help" color="inherit">{t('nav.help')}</Button>
+        <Select size="small" value={locale} onChange={(e)=>setLocale(e.target.value)} sx={{ ml: 1 }}>
+          <MenuItem value="uz">UZ</MenuItem>
+          <MenuItem value="ru">RU</MenuItem>
+          <MenuItem value="en">EN</MenuItem>
+        </Select>
         {user ? (
           <>
-            <Button component={RouterLink} to="/analysis/new" variant="contained" color="primary">New Analysis</Button>
-            <Button component={RouterLink} to="/dashboard" color="inherit">Dashboard</Button>
-            <Button onClick={handleLogout} color="inherit">Logout</Button>
+            <Button component={RouterLink} to="/analysis/new" variant="contained" color="primary">{t('nav.new')}</Button>
+            <Button component={RouterLink} to="/dashboard" color="inherit">{t('nav.dashboard')}</Button>
+            <Button onClick={handleLogout} color="inherit">{t('nav.logout')}</Button>
           </>
         ) : (
           <>
-            <Button component={RouterLink} to="/login" color="inherit">Login</Button>
-            <Button component={RouterLink} to="/register" variant="contained" color="primary">Sign Up</Button>
+            <Button component={RouterLink} to="/login" color="inherit">{t('nav.login')}</Button>
+            <Button component={RouterLink} to="/register" variant="contained" color="primary">{t('nav.signup')}</Button>
           </>
         )}
       </Toolbar>
     </AppBar>
   )
 }
-

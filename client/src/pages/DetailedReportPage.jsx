@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Box, Paper, Typography, Tabs, Tab, Grid, Card, CardContent, List, ListItem, ListItemText, Alert, Button, Chip, LinearProgress } from '@mui/material'
+import { Box, Paper, Typography, Tabs, Tab, Grid, Card, CardContent, List, ListItem, ListItemText, Alert, Button, Chip, LinearProgress, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, TextField, Stack } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import ShareIcon from '@mui/icons-material/Share'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
@@ -8,15 +8,17 @@ import OpacityIcon from '@mui/icons-material/Opacity'
 import WaterDropIcon from '@mui/icons-material/WaterDrop'
 import SmartToyIcon from '@mui/icons-material/SmartToy'
 import BoltIcon from '@mui/icons-material/Bolt'
+import FavoriteIcon from '@mui/icons-material/Favorite'
 import WbSunnyIcon from '@mui/icons-material/WbSunny'
 import CloudIcon from '@mui/icons-material/Cloud'
 import CloudQueueIcon from '@mui/icons-material/CloudQueue'
-import { getAnalysis } from '../services/api'
+import { getAnalysis, getShareInfo, setShareEnabled, downloadAnalysisPdf } from '../services/api'
 import Loader from '../components/Loader'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, LineChart, Line, CartesianGrid, Legend } from 'recharts'
 import ReportHistoryTab from '../components/reports/ReportHistoryTab'
 import ReportCompositionTab from '../components/reports/ReportCompositionTab'
 import SummaryCard from '../components/reports/SummaryCard'
+import { useI18n } from '../i18n'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28']
 
@@ -27,6 +29,13 @@ export default function DetailedReportPage() {
   const [tab, setTab] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [shareOpen, setShareOpen] = useState(false)
+  const [shareEnabled, setShareEnabledState] = useState(false)
+  const [shareUrl, setShareUrl] = useState('')
+  const [busyShare, setBusyShare] = useState(false)
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
+  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000'
+  const { t } = useI18n()
 
   useEffect(() => {
     (async () => {
@@ -35,6 +44,12 @@ export default function DetailedReportPage() {
         const d = await getAnalysis(id)
         setData(d)
         setError(null)
+        // fetch share info in background
+        try {
+          const s = await getShareInfo(id)
+          setShareEnabledState(!!s.shareEnabled)
+          setShareUrl(s.shareUrl || '')
+        } catch (_) { /* ignore */ }
       } catch (e) {
         setError('Failed to load report')
       } finally {
@@ -81,23 +96,78 @@ export default function DetailedReportPage() {
   if (loading) return <Loader />
   if (error) return <Alert severity="error">{error}</Alert>
 
+  const toggleShare = async () => {
+    setBusyShare(true)
+    try {
+      const next = !shareEnabled
+      const res = await setShareEnabled(id, next)
+      setShareEnabledState(!!res.shareEnabled)
+      setShareUrl(res.shareUrl || '')
+    } catch (e) {
+      // leave state as is; error will be surfaced by interceptor
+    } finally {
+      setBusyShare(false)
+    }
+  }
+
+  const fullShare = shareUrl ? `${apiBase}${shareUrl}` : ''
+  let shareToken = ''
+  try {
+    const qs = shareUrl.split('?')[1]
+    if (qs) {
+      const usp = new URLSearchParams(qs)
+      shareToken = usp.get('token') || ''
+    }
+  } catch (e) {}
+  const webShare = shareToken ? `${window.location.origin}/share/${id}?token=${encodeURIComponent(shareToken)}` : fullShare
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(webShare)
+      alert(t('report.copied'))
+    } catch (e) {
+      window.prompt('Ulashish linkini qo\'lda nusxa oling:', webShare)
+    }
+  }
+
+  const handleDownloadPdf = async () => {
+    setDownloadingPdf(true)
+    try {
+      const blob = await downloadAnalysisPdf(id)
+      const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `analysis_${id}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e) {
+      // error via interceptor
+    } finally {
+      setDownloadingPdf(false)
+    }
+  }
+
   return (
     <Paper elevation={0} sx={{ p: 3 }}>
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, gap: 2, flexWrap: 'wrap' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Button onClick={() => navigate(-1)} startIcon={<ArrowBackIcon />} sx={{ textTransform: 'none' }}>Orqaga</Button>
-          <Typography variant="h5" fontWeight={700}>Batafsil hisobot</Typography>
+          <Button onClick={() => navigate(-1)} startIcon={<ArrowBackIcon />} sx={{ textTransform: 'none' }}>{t('report.back')}</Button>
+          <Typography variant="h5" fontWeight={700}>{t('report.title')}</Typography>
           <Typography variant="body2" color="text.secondary">ID: {data.id}</Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" startIcon={<ShareIcon />} sx={{ textTransform: 'none' }}>Ulashish</Button>
-          <Button variant="outlined" startIcon={<PictureAsPdfIcon />} sx={{ textTransform: 'none' }}>PDF yuklab olish</Button>
+          <Button variant="outlined" startIcon={<ShareIcon />} sx={{ textTransform: 'none' }} onClick={()=>setShareOpen(true)}>{t('report.share')}</Button>
+          <Button variant="outlined" startIcon={<PictureAsPdfIcon />} sx={{ textTransform: 'none' }} onClick={handleDownloadPdf} disabled={downloadingPdf}>{downloadingPdf ? '...' : t('report.pdf')}</Button>
         </Box>
       </Box>
 
       {/* Summary cards */}
       <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid item xs={12} md={3}>
+          <SummaryCard title="Soil Health Score" value={`${data.health_score ?? '—'}`} subtitle="0–100" icon={<FavoriteIcon />} color="#e53935" />
+        </Grid>
         <Grid item xs={12} md={3}>
           <SummaryCard title="Sho'rlanish darajasi" value={`${data.salinity_level ?? '—'}%`} subtitle={salinitySeverity.label} icon={<WaterDropIcon />} color="#1976d2" />
         </Grid>
@@ -202,6 +272,36 @@ export default function DetailedReportPage() {
       )}
 
       {tab === 4 && <ReportHistoryTab analysisId={id} />}
+
+      {/* Share dialog */}
+      <Dialog open={shareOpen} onClose={()=>setShareOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>{t('share.title')}</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            {t('share.note')}
+          </DialogContentText>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
+            <Button variant={shareEnabled ? 'contained' : 'outlined'} color={shareEnabled ? 'success' : 'primary'} onClick={toggleShare} disabled={busyShare}>
+              {shareEnabled ? t('share.enabled') : t('share.enable')}
+            </Button>
+            {shareEnabled && (
+              <Button variant="outlined" color="error" onClick={toggleShare} disabled={busyShare}>{t('share.disable')}</Button>
+            )}
+          </Stack>
+          {shareEnabled && (
+            <>
+              <TextField fullWidth label={t('share.link')} value={webShare} InputProps={{ readOnly: true }} sx={{ mb: 1 }} />
+              <Button onClick={copyToClipboard}>{t('share.copy')}</Button>
+              <DialogContentText variant="caption" color="text.secondary">
+                {t('share.note')}
+              </DialogContentText>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={()=>setShareOpen(false)}>OK</Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   )
 }

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Grid, Card, CardContent, Button, LinearProgress, List, ListItem, ListItemIcon, ListItemText, Alert } from '@mui/material'
+import { Box, Paper, Typography, Grid, Card, CardContent, Button, LinearProgress, List, ListItem, ListItemIcon, ListItemText, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Stack, TextField } from '@mui/material'
+import ShareIcon from '@mui/icons-material/Share'
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CheckIcon from '@mui/icons-material/Check'
-import { getAnalysis } from '../services/api'
+import { getAnalysis, getShareInfo, setShareEnabled, downloadAnalysisPdf } from '../services/api'
 import Loader from '../components/Loader'
 
 export default function ResultsPage() {
@@ -11,6 +13,12 @@ export default function ResultsPage() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [shareOpen, setShareOpen] = useState(false)
+  const [shareEnabled, setShareEnabledState] = useState(false)
+  const [shareUrl, setShareUrl] = useState('')
+  const [busyShare, setBusyShare] = useState(false)
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
+  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000'
 
   useEffect(() => {
     (async () => {
@@ -19,6 +27,11 @@ export default function ResultsPage() {
         const d = await getAnalysis(id)
         setData(d)
         setError(null)
+        try {
+          const s = await getShareInfo(id)
+          setShareEnabledState(!!s.shareEnabled)
+          setShareUrl(s.shareUrl || '')
+        } catch (e) { /* ignore */ }
       } catch (e) {
         setError('Failed to load results')
       } finally {
@@ -30,6 +43,53 @@ export default function ResultsPage() {
   const navigate = useNavigate()
   if (loading) return <Loader />
   if (error) return <Alert severity="error">{error}</Alert>
+
+  const toggleShare = async () => {
+    setBusyShare(true)
+    try {
+      const res = await setShareEnabled(id, !shareEnabled)
+      setShareEnabledState(!!res.shareEnabled)
+      setShareUrl(res.shareUrl || '')
+    } catch (e) { } finally {
+      setBusyShare(false)
+    }
+  }
+
+  let shareToken = ''
+  try {
+    const qs = shareUrl.split('?')[1]
+    if (qs) {
+      const usp = new URLSearchParams(qs)
+      shareToken = usp.get('token') || ''
+    }
+  } catch (e) {}
+  const webShare = shareToken ? `${window.location.origin}/share/${id}?token=${encodeURIComponent(shareToken)}` : (shareUrl ? `${apiBase}${shareUrl}` : '')
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(webShare)
+      alert('Link nusxa olindi')
+    } catch (e) {
+      window.prompt('Ulashish linkini qo\'lda nusxa oling:', webShare)
+    }
+  }
+
+  const handleDownloadPdf = async () => {
+    setDownloadingPdf(true)
+    try {
+      const blob = await downloadAnalysisPdf(id)
+      const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `analysis_${id}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e) {} finally {
+      setDownloadingPdf(false)
+    }
+  }
 
   const metrics = [
     {
@@ -115,7 +175,31 @@ export default function ResultsPage() {
         <Button variant="outlined" onClick={() => navigate('/analysis/new')}>
           Yangi tahlil
         </Button>
+        <Button variant="outlined" startIcon={<ShareIcon />} onClick={()=>setShareOpen(true)}>Ulashish</Button>
+        <Button variant="outlined" startIcon={<PictureAsPdfIcon />} onClick={handleDownloadPdf} disabled={downloadingPdf}>{downloadingPdf ? '...' : 'PDF yuklab olish'}</Button>
       </Box>
+
+      <Dialog open={shareOpen} onClose={()=>setShareOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Hisobotni ulashish</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>Maxfiy link orqali hisobotni ulashing. Xohlagan vaqtda o‘chirishingiz mumkin.</DialogContentText>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
+            <Button variant={shareEnabled ? 'contained' : 'outlined'} color={shareEnabled ? 'success' : 'primary'} onClick={toggleShare} disabled={busyShare}>
+              {shareEnabled ? 'Ulashish yoqilgan' : 'Ulashishni yoqish'}
+            </Button>
+            {shareEnabled && <Button variant="outlined" color="error" onClick={toggleShare} disabled={busyShare}>O‘chirish</Button>}
+          </Stack>
+          {shareEnabled && (
+            <>
+              <TextField fullWidth label="Ulashish linki" value={webShare} InputProps={{ readOnly: true }} sx={{ mb: 1 }} />
+              <Button onClick={copyToClipboard}>Linkni nusxalash</Button>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={()=>setShareOpen(false)}>Yopish</Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   )
 }

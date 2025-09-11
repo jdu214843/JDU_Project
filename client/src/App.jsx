@@ -10,6 +10,7 @@ import AnalysisForm from './pages/AnalysisForm'
 import ProcessingPage from './pages/ProcessingPage'
 import ResultsPage from './pages/ResultsPage'
 import DetailedReportPage from './pages/DetailedReportPage'
+import PublicSharePage from './pages/PublicSharePage'
 import DashboardPage from './pages/DashboardPage'
 import TechnologiesPage from './pages/TechnologiesPage'
 import PremiumPage from './pages/PremiumPage'
@@ -42,6 +43,7 @@ export default function App() {
           <Route index element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/share/:id" element={<PublicSharePage />} />
           <Route path="/technologies" element={<TechnologiesPage />} />
           <Route path="/premium" element={<PremiumPage />} />
           <Route path="/help" element={<HelpCenterPage />} />

@@ -8,6 +8,7 @@ import BluetoothIcon from '@mui/icons-material/Bluetooth'
 import BatteryFullIcon from '@mui/icons-material/BatteryFull'
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
 import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone'
+import { useI18n } from '../../i18n/translate'
 
 const ICONS = {
   Wifi: <WifiIcon fontSize="small" />,
@@ -21,6 +22,7 @@ const ICONS = {
 }
 
 export default function ProductCard({ product, onDetails, onOrder }) {
+  const { t } = useI18n()
   const { name, description, price, imageUrl, features = [] } = product
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -52,7 +54,7 @@ export default function ProductCard({ product, onDetails, onOrder }) {
           sx={{ textTransform: 'none' }}
           onClick={() => onDetails && onDetails(product)}
         >
-          Tafsilotlar
+          {t('products.details')}
         </Button>
         <Button
           variant="contained"
@@ -60,7 +62,7 @@ export default function ProductCard({ product, onDetails, onOrder }) {
           sx={{ textTransform: 'none' }}
           onClick={() => onOrder && onOrder(product)}
         >
-          Buyurtma
+          {t('products.order')}
         </Button>
       </CardActions>
     </Card>

@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react'
 import { Grid, Card, CardContent, Typography, Box, LinearProgress, Chip, Divider } from '@mui/material'
+import { useI18n } from '../../i18n/translate'
 
-function prettyName(key) {
-  const map = { sand: 'Qum', clay: 'Gil', silt: 'Silt' }
+function prettyName(key, t) {
+  const map = { sand: t('composition.sand'), clay: t('composition.clay'), silt: t('composition.silt') }
   return map[key] || key.charAt(0).toUpperCase() + key.slice(1)
 }
 
@@ -20,6 +21,7 @@ function statusColor(status) {
 }
 
 export default function ReportCompositionTab({ soilComposition, chemicalProperties }) {
+  const { t } = useI18n()
   const entries = useMemo(() => {
     if (!soilComposition) return []
     return Object.entries(soilComposition)
@@ -33,14 +35,14 @@ export default function ReportCompositionTab({ soilComposition, chemicalProperti
       <Grid item xs={12} md={6}>
         <Card>
           <CardContent>
-            <Typography variant="h6" gutterBottom>Tuproq tarkibi</Typography>
+            <Typography variant="h6" gutterBottom>{t('composition.title')}</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {entries.map(([key, value]) => {
                 const pct = Number(value) || 0
                 return (
                   <Box key={key}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                      <Typography variant="body2" fontWeight={600}>{prettyName(key)}</Typography>
+                      <Typography variant="body2" fontWeight={600}>{prettyName(key, t)}</Typography>
                       <Typography variant="body2" color="text.secondary">{pct}%</Typography>
                     </Box>
                     <LinearProgress variant="determinate" value={Math.max(0, Math.min(100, pct))} />
@@ -56,12 +58,12 @@ export default function ReportCompositionTab({ soilComposition, chemicalProperti
       <Grid item xs={12} md={6}>
         <Card>
           <CardContent>
-            <Typography variant="h6" gutterBottom>Kimyoviy xususiyatlar</Typography>
+            <Typography variant="h6" gutterBottom>{t('composition.chemicalTitle')}</Typography>
             {/* Header row */}
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 1, mb: 1 }}>
-              <Typography variant="caption" color="text.secondary">Element</Typography>
-              <Typography variant="caption" color="text.secondary">Miqdor</Typography>
-              <Typography variant="caption" color="text.secondary">Holat</Typography>
+              <Typography variant="caption" color="text.secondary">{t('composition.element')}</Typography>
+              <Typography variant="caption" color="text.secondary">{t('composition.amount')}</Typography>
+              <Typography variant="caption" color="text.secondary">{t('composition.status')}</Typography>
             </Box>
             <Divider sx={{ mb: 1 }} />
             {/* Rows */}
@@ -74,7 +76,7 @@ export default function ReportCompositionTab({ soilComposition, chemicalProperti
                 </Box>
               ))}
               {chemicals.length === 0 && (
-                <Typography variant="body2" color="text.secondary">Kimyoviy ma'lumotlar topilmadi</Typography>
+                <Typography variant="body2" color="text.secondary">{t('composition.none')}</Typography>
               )}
             </Box>
           </CardContent>

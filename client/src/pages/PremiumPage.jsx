@@ -3,6 +3,7 @@ import { Container, Typography, Grid, Card, CardContent, Box, Button, List, List
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { useNavigate } from 'react-router-dom'
+import { useI18n } from '../i18n/translate'
 
 const FEATURES = [
   'Real-time monitoring',
@@ -18,17 +19,18 @@ const TARIFFS = [
 ]
 
 export default function PremiumPage() {
+  const { t } = useI18n()
   const navigate = useNavigate()
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
         <WorkspacePremiumIcon color="primary" />
-        <Typography variant="h5" fontWeight={800}>Premium</Typography>
+        <Typography variant="h5" fontWeight={800}>{t('premium.header')}</Typography>
       </Box>
 
       {/* Premium Features */}
-      <Typography variant="h6" gutterBottom>Premium Xususiyatlar</Typography>
+      <Typography variant="h6" gutterBottom>{t('premium.features')}</Typography>
       <Grid container spacing={2} sx={{ mb: 4 }}>
         {FEATURES.map((f, i) => (
           <Grid item xs={12} sm={6} md={3} key={i}>
@@ -45,7 +47,7 @@ export default function PremiumPage() {
       </Grid>
 
       {/* Benefits */}
-      <Typography variant="h6" gutterBottom>Premium bilan nimalarga erishasiz?</Typography>
+      <Typography variant="h6" gutterBottom>{t('premium.benefits')}</Typography>
       <List dense>
         {[
           "Hosilni oshirish uchun AI tavsiyalar",
@@ -62,7 +64,7 @@ export default function PremiumPage() {
       </List>
 
       {/* Plans */}
-      <Typography variant="h6" gutterBottom>Tariflar</Typography>
+      <Typography variant="h6" gutterBottom>{t('premium.plans')}</Typography>
       <Grid container spacing={3}>
         {TARIFFS.map((p) => (
           <Grid item xs={12} md={4} key={p.id}>
@@ -81,7 +83,7 @@ export default function PremiumPage() {
                   ))}
                 </List>
                 <Button variant="contained" color="primary" onClick={() => navigate(`/checkout/${p.id}`)}>
-                  Tanlash
+                  {t('premium.choose')}
                 </Button>
               </CardContent>
             </Card>

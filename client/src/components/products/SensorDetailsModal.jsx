@@ -1,7 +1,9 @@
 import React from 'react'
 import { Dialog, DialogTitle, DialogContent, Typography, Box } from '@mui/material'
+import { useI18n } from '../../i18n/translate'
 
 export default function SensorDetailsModal({ open, onClose, sensor }) {
+  const { t } = useI18n()
   if (!sensor) return null
   const details = sensor.details || {}
   const specs = Array.isArray(details.specs) ? details.specs : []
@@ -15,7 +17,7 @@ export default function SensorDetailsModal({ open, onClose, sensor }) {
           </Typography>
         )}
         <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-          Texnik xususiyatlar:
+          {t('sensor.specs')}
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {specs.map((s, idx) => (
@@ -25,11 +27,10 @@ export default function SensorDetailsModal({ open, onClose, sensor }) {
             </Box>
           ))}
           {specs.length === 0 && (
-            <Typography variant="body2" color="text.secondary">Ma'lumotlar topilmadi</Typography>
+            <Typography variant="body2" color="text.secondary">{t('sensor.noData')}</Typography>
           )}
         </Box>
       </DialogContent>
     </Dialog>
   )
 }
-

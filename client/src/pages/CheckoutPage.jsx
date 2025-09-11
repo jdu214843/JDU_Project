@@ -4,6 +4,7 @@ import { Container, Typography, Grid, Card, CardContent, Box, Button, Alert } fr
 import { Elements, CardElement, useElements, useStripe } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
 import { api } from '../services/api'
+import { useI18n } from '../i18n/translate'
 
 const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
 const stripePromise = publishableKey ? loadStripe(publishableKey) : null
@@ -15,6 +16,7 @@ const PLANS = {
 }
 
 function CheckoutForm({ planId }) {
+  const { t } = useI18n()
   const navigate = useNavigate()
   const stripe = useStripe()
   const elements = useElements()
@@ -58,7 +60,7 @@ function CheckoutForm({ planId }) {
       <Grid item xs={12} md={6}>
         <Card>
           <CardContent>
-            <Typography variant="h6" gutterBottom>To'lov ma'lumotlari</Typography>
+            <Typography variant="h6" gutterBottom>{t('checkout.details')}</Typography>
             {plan?.amount > 0 ? (
               <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Box sx={{ p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
@@ -67,15 +69,15 @@ function CheckoutForm({ planId }) {
                 {error && <Alert severity="error">{error}</Alert>}
                 <Box>
                   <Button type="submit" variant="contained" disabled={!stripe || loading}>
-                    {loading ? 'Jo\'natilmoqda...' : 'To\'lovni amalga oshirish'}
+                    {loading ? '...' : t('checkout.pay')}
                   </Button>
                 </Box>
               </Box>
             ) : (
               <Box>
-                <Alert severity="info">Bu reja uchun to'lov talab qilinmaydi.</Alert>
+                <Alert severity="info">-</Alert>
                 <Box mt={2}>
-                  <Button onClick={handleSubmit} variant="contained">Faollashtirish</Button>
+                  <Button onClick={handleSubmit} variant="contained">{t('checkout.activate')}</Button>
                 </Box>
               </Box>
             )}
@@ -85,7 +87,7 @@ function CheckoutForm({ planId }) {
       <Grid item xs={12} md={6}>
         <Card>
           <CardContent>
-            <Typography variant="h6" gutterBottom>Reja tafsilotlari</Typography>
+            <Typography variant="h6" gutterBottom>{t('checkout.planDetails')}</Typography>
             <Typography variant="h5" fontWeight={800}>{plan?.name}</Typography>
             <Typography variant="body2" color="text.secondary">Narx: {plan?.price}</Typography>
           </CardContent>
@@ -96,10 +98,11 @@ function CheckoutForm({ planId }) {
 }
 
 export default function CheckoutPage() {
+  const { t } = useI18n()
   const { planId } = useParams()
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h5" fontWeight={800} gutterBottom>To'lov</Typography>
+      <Typography variant="h5" fontWeight={800} gutterBottom>{t('checkout.header')}</Typography>
       <Elements stripe={stripePromise}>
         <CheckoutForm planId={planId} />
       </Elements>

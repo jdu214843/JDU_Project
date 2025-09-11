@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Container, Box, Card, CardContent, Typography, Tabs, Tab, Alert, Avatar, Chip } from '@mui/material'
+import { useI18n } from '../i18n/translate'
 import useAuthStore from '../store/auth'
 import { getMe } from '../services/api'
 import Loader from '../components/Loader'
@@ -13,6 +14,7 @@ export default function DashboardPage() {
   const { user, setUser } = useAuthStore()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const { t } = useI18n()
 
   useEffect(() => {
     (async () => {
@@ -32,7 +34,7 @@ export default function DashboardPage() {
   if (loading) return <Loader />
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{t('dashboard.loadError')}</Alert>}
 
       {/* User Header */}
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
@@ -41,17 +43,14 @@ export default function DashboardPage() {
         </Avatar>
         <Typography variant="h5" fontWeight={600}>{user?.fullName || 'Foydalanuvchi'}</Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>{user?.email}</Typography>
-        <Chip label="Farmer" color="success" size="small" sx={{ mt: 1 }} />
+        <Chip label={t('dashboard.farmer')} color="success" size="small" sx={{ mt: 1 }} />
       </Box>
 
       {/* Tabs Card */}
       <Card>
         <CardContent sx={{ pt: 2 }}>
           <Tabs value={tab} onChange={(_,v)=>setTab(v)} sx={{ mb: 2 }}>
-            <Tab label="Profile" />
-            <Tab label="Tarix" />
-            <Tab label="Sozlamalar" />
-            <Tab label="Maxfiylik" />
+            {['dashboard.tabs.0','dashboard.tabs.1','dashboard.tabs.2','dashboard.tabs.3'].map((k)=>(<Tab key={k} label={t(k)} />))}
           </Tabs>
 
           {tab === 0 && (

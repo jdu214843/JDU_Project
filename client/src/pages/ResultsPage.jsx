@@ -6,10 +6,12 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CheckIcon from '@mui/icons-material/Check'
 import { getAnalysis, getShareInfo, setShareEnabled, downloadAnalysisPdf } from '../services/api'
+import { useI18n } from '../i18n/translate'
 import Loader from '../components/Loader'
 
 export default function ResultsPage() {
   const { id } = useParams()
+  const { t } = useI18n()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -70,7 +72,7 @@ export default function ResultsPage() {
       await navigator.clipboard.writeText(webShare)
       alert('Link nusxa olindi')
     } catch (e) {
-      window.prompt('Ulashish linkini qo\'lda nusxa oling:', webShare)
+      window.prompt(`${t('share.link')}:`, webShare)
     }
   }
 
@@ -93,25 +95,25 @@ export default function ResultsPage() {
 
   const metrics = [
     {
-      label: "Sho'rlanish",
+      label: 'Salinity',
       value: data.salinity_level ?? 0,
       unit: '%',
       pct: Math.max(0, Math.min(100, Math.round(((Number(data.salinity_level) || 0) / 5) * 100))),
-      helper: '0–5% diapazonda baholandi',
+      helper: t('results.helpers.salinity'),
     },
     {
       label: 'pH',
       value: data.ph_level ?? 0,
       unit: '',
       pct: Math.max(0, Math.min(100, Math.round(((Number(data.ph_level) || 0) / 14) * 100))),
-      helper: '0–14 pH shkalasi',
+      helper: t('results.helpers.ph'),
     },
     {
-      label: 'Namlik',
+      label: t('detailed.moisture'),
       value: data.moisture_percentage ?? 0,
       unit: '%',
       pct: Math.max(0, Math.min(100, Number(data.moisture_percentage) || 0)),
-      helper: '0–100% diapazon',
+      helper: t('results.helpers.moisture'),
     },
   ]
 
@@ -120,7 +122,7 @@ export default function ResultsPage() {
       {/* Header */}
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
         <CheckCircleIcon color="success" sx={{ fontSize: 64, mb: 1 }} />
-        <Typography variant="h5" fontWeight={700}>Tahlil Yakunlandi!</Typography>
+        <Typography variant="h5" fontWeight={700}>{t('results.done')}</Typography>
         <Typography variant="body2" color="text.secondary">ID: {data.id} • {new Date(data.submitted_at).toLocaleString()}</Typography>
       </Box>
 
@@ -130,7 +132,7 @@ export default function ResultsPage() {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Umumiy Natija</Typography>
+              <Typography variant="h6" gutterBottom>{t('results.summary')}</Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {metrics.map((m) => (
                   <Box key={m.label}>
@@ -151,7 +153,7 @@ export default function ResultsPage() {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Tavsiyalar</Typography>
+              <Typography variant="h6" gutterBottom>{t('results.recommendations')}</Typography>
               <List>
                 {(data.recommendations || []).map((rec, idx) => (
                   <ListItem key={idx} disableGutters>
@@ -170,34 +172,34 @@ export default function ResultsPage() {
       {/* Actions */}
       <Box sx={{ display: 'flex', gap: 2, mt: 3, flexWrap: 'wrap' }}>
         <Button variant="contained" color="success" onClick={() => navigate(`/analyses/${id}`)}>
-          Batafsil hisobot
+          {t('results.detail')}
         </Button>
         <Button variant="outlined" onClick={() => navigate('/analysis/new')}>
-          Yangi tahlil
+          {t('results.new')}
         </Button>
-        <Button variant="outlined" startIcon={<ShareIcon />} onClick={()=>setShareOpen(true)}>Ulashish</Button>
-        <Button variant="outlined" startIcon={<PictureAsPdfIcon />} onClick={handleDownloadPdf} disabled={downloadingPdf}>{downloadingPdf ? '...' : 'PDF yuklab olish'}</Button>
+        <Button variant="outlined" startIcon={<ShareIcon />} onClick={()=>setShareOpen(true)}>{t('results.share')}</Button>
+        <Button variant="outlined" startIcon={<PictureAsPdfIcon />} onClick={handleDownloadPdf} disabled={downloadingPdf}>{downloadingPdf ? '...' : t('results.pdf')}</Button>
       </Box>
 
       <Dialog open={shareOpen} onClose={()=>setShareOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>Hisobotni ulashish</DialogTitle>
+        <DialogTitle>{t('share.title')}</DialogTitle>
         <DialogContent>
-          <DialogContentText sx={{ mb: 2 }}>Maxfiy link orqali hisobotni ulashing. Xohlagan vaqtda o‘chirishingiz mumkin.</DialogContentText>
+          <DialogContentText sx={{ mb: 2 }}>{t('share.note')}</DialogContentText>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
             <Button variant={shareEnabled ? 'contained' : 'outlined'} color={shareEnabled ? 'success' : 'primary'} onClick={toggleShare} disabled={busyShare}>
-              {shareEnabled ? 'Ulashish yoqilgan' : 'Ulashishni yoqish'}
+              {shareEnabled ? t('share.enabled') : t('share.enable')}
             </Button>
-            {shareEnabled && <Button variant="outlined" color="error" onClick={toggleShare} disabled={busyShare}>O‘chirish</Button>}
+            {shareEnabled && <Button variant="outlined" color="error" onClick={toggleShare} disabled={busyShare}>{t('share.disable')}</Button>}
           </Stack>
           {shareEnabled && (
             <>
-              <TextField fullWidth label="Ulashish linki" value={webShare} InputProps={{ readOnly: true }} sx={{ mb: 1 }} />
-              <Button onClick={copyToClipboard}>Linkni nusxalash</Button>
+              <TextField fullWidth label="{t('share.link')}" value={webShare} InputProps={{ readOnly: true }} sx={{ mb: 1 }} />
+              <Button onClick={copyToClipboard}>{t('share.copy')}</Button>
             </>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={()=>setShareOpen(false)}>Yopish</Button>
+          <Button onClick={()=>setShareOpen(false)}>OK</Button>
         </DialogActions>
       </Dialog>
     </Paper>

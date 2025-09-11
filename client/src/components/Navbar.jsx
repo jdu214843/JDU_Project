@@ -2,7 +2,7 @@ import React from 'react'
 import { AppBar, Toolbar, Typography, Button, Box, Select, MenuItem } from '@mui/material'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/auth'
-import { useI18n } from '../i18n'
+import { useI18n } from '../i18n/translate'
 
 export default function Navbar() {
   const navigate = useNavigate()

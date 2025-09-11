@@ -6,6 +6,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs'
 import { useNavigate } from 'react-router-dom'
 import { submitAnalysis } from '../services/api'
+import { useI18n } from '../i18n/translate'
 
 const SOIL_TYPES = ['Sandy', 'Clay', 'Silt', 'Loam']
 const CROP_TYPES = ['Wheat', 'Corn', 'Rice', 'Vegetables', 'Fruits']
@@ -13,6 +14,7 @@ const IRRIGATION = ['Drip', 'Sprinkler', 'Flood', 'Rainfed']
 
 export default function AnalysisForm() {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const [activeStep, setActiveStep] = useState(0)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -34,7 +36,7 @@ export default function AnalysisForm() {
     const imgOnly = files.filter((f) => f.type.startsWith('image/'))
     const next = [...images, ...imgOnly].slice(0, 5)
     if (next.length < images.length + files.length) {
-      setError('Only image files are allowed (max 5).')
+      setError(t('analysisForm.onlyImages'))
     }
     setImages(next)
   }
@@ -62,9 +64,9 @@ export default function AnalysisForm() {
 
   return (
     <Paper elevation={0} sx={{ p: 3 }}>
-      <Typography variant="h5" fontWeight={600} gutterBottom>New Soil Analysis</Typography>
+      <Typography variant="h5" fontWeight={600} gutterBottom>{t('analysisForm.title')}</Typography>
       <Stepper activeStep={activeStep} sx={{ mb: 3 }}>
-        {['General Info', 'Additional Info', 'Images'].map((label) => (
+        {(Array.isArray(t('analysisForm.steps')) ? t('analysisForm.steps') : ['General Info', 'Additional Info', 'Images']).map((label) => (
           <Step key={label}><StepLabel>{label}</StepLabel></Step>
         ))}
       </Stepper>
@@ -73,20 +75,20 @@ export default function AnalysisForm() {
       {activeStep === 0 && (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}><TextField label="Location" fullWidth value={general.location} onChange={(e)=>setGeneral({...general, location: e.target.value})} /></Grid>
-            <Grid item xs={12} md={6}><TextField label="Area (hectares)" type="number" fullWidth value={general.area} onChange={(e)=>setGeneral({...general, area: e.target.value})} /></Grid>
+            <Grid item xs={12} md={6}><TextField label={t('analysisForm.location')} fullWidth value={general.location} onChange={(e)=>setGeneral({...general, location: e.target.value})} /></Grid>
+            <Grid item xs={12} md={6}><TextField label={t('analysisForm.area')} type="number" fullWidth value={general.area} onChange={(e)=>setGeneral({...general, area: e.target.value})} /></Grid>
             <Grid item xs={12} md={6}>
-              <TextField label="Soil Type" select fullWidth value={general.soilType} onChange={(e)=>setGeneral({...general, soilType: e.target.value})}>
+              <TextField label={t('analysisForm.soilType')} select fullWidth value={general.soilType} onChange={(e)=>setGeneral({...general, soilType: e.target.value})}>
                 {SOIL_TYPES.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
               </TextField>
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField label="Crop Type" select fullWidth value={general.cropType} onChange={(e)=>setGeneral({...general, cropType: e.target.value})}>
+              <TextField label={t('analysisForm.cropType')} select fullWidth value={general.cropType} onChange={(e)=>setGeneral({...general, cropType: e.target.value})}>
                 {CROP_TYPES.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
               </TextField>
             </Grid>
             <Grid item xs={12} md={6}>
-              <DatePicker label="Last Harvest Date" value={general.lastHarvestDate} onChange={(v)=>setGeneral({...general, lastHarvestDate: v})} slotProps={{ textField: { fullWidth: true } }} />
+              <DatePicker label={t('analysisForm.lastHarvestDate')} value={general.lastHarvestDate} onChange={(v)=>setGeneral({...general, lastHarvestDate: v})} slotProps={{ textField: { fullWidth: true } }} />
             </Grid>
           </Grid>
         </LocalizationProvider>
@@ -95,19 +97,19 @@ export default function AnalysisForm() {
       {activeStep === 1 && (
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
-            <TextField label="Irrigation Method" select fullWidth value={additional.irrigationMethod} onChange={(e)=>setAdditional({...additional, irrigationMethod: e.target.value})}>
+            <TextField label={t('analysisForm.irrigationMethod')} select fullWidth value={additional.irrigationMethod} onChange={(e)=>setAdditional({...additional, irrigationMethod: e.target.value})}>
               {IRRIGATION.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
             </TextField>
           </Grid>
           <Grid item xs={12}>
-            <TextField label="Observed Symptoms" fullWidth multiline minRows={4} value={additional.observations} onChange={(e)=>setAdditional({...additional, observations: e.target.value})} />
+            <TextField label={t('analysisForm.observations')} fullWidth multiline minRows={4} value={additional.observations} onChange={(e)=>setAdditional({...additional, observations: e.target.value})} />
           </Grid>
         </Grid>
       )}
 
       {activeStep === 2 && (
         <Box>
-          <Button variant="outlined" component="label">Upload Images (max 5)
+          <Button variant="outlined" component="label">{t('analysisForm.upload')}
             <input type="file" hidden multiple accept="image/*" onChange={handleFiles} />
           </Button>
           <Stack direction="row" spacing={2} mt={2} flexWrap="wrap">
@@ -119,11 +121,11 @@ export default function AnalysisForm() {
       )}
 
       <Box display="flex" justifyContent="space-between" mt={3}>
-        <Button disabled={activeStep===0} onClick={()=>setActiveStep((s)=>s-1)}>Back</Button>
+        <Button disabled={activeStep===0} onClick={()=>setActiveStep((s)=>s-1)}>{t('analysisForm.back')}</Button>
         {activeStep < 2 ? (
-          <Button variant="contained" onClick={()=>setActiveStep((s)=>s+1)}>Next</Button>
+          <Button variant="contained" onClick={()=>setActiveStep((s)=>s+1)}>{t('analysisForm.next')}</Button>
         ) : (
-          <Button variant="contained" color="primary" onClick={handleSubmit} disabled={loading}>{loading ? 'Submitting...' : 'Submit'}</Button>
+          <Button variant="contained" color="primary" onClick={handleSubmit} disabled={loading}>{loading ? t('analysisForm.submitting') : t('analysisForm.submit')}</Button>
         )}
       </Box>
     </Paper>

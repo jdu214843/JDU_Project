@@ -2,6 +2,10 @@ import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { getClient, query } from '../db/index.js'
 import { runAIAnalysis } from '../services/ai.js'
+import { buildAnalysisPdf } from '../services/report.js'
+import { setProgress as setAnalysisProgress, complete as completeProgress } from '../services/progress.js'
+import { query as dbQuery } from '../db/index.js'
+import { sendMail, buildAnalysisReportEmail } from '../services/email.js'
 
 export async function createAnalysis(req, res) {
   const client = await getClient()
@@ -41,16 +45,16 @@ export async function createAnalysis(req, res) {
       try {
         const images = files.map((f) => ({ url: `/uploads/${path.basename(f.path)}` }))
         const data = { location, area, soil_type: soilType, crop_type: cropType, irrigation_method: irrigationMethod, observations, last_harvest_date: lastHarvestDate }
-        const result = await runAIAnalysis(data, images)
+        const result = await runAIAnalysis(data, images, { onProgress: (p) => setAnalysisProgress(analysisId, p) })
         await query(
           `INSERT INTO analysis_results (
               id, analysis_id,
               salinity_level, ph_level, moisture_percentage,
               soil_composition, chemical_properties, recommendations,
-              ai_confidence, risk_level, affected_area_percentage,
+              ai_confidence, risk_level, affected_area_percentage, health_score,
               completed_at
            )
-           VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8::jsonb, $9, $10, $11, NOW())
+           VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8::jsonb, $9, $10, $11, $12, NOW())
            ON CONFLICT (analysis_id)
            DO UPDATE SET salinity_level = EXCLUDED.salinity_level,
                          ph_level = EXCLUDED.ph_level,
@@ -61,6 +65,7 @@ export async function createAnalysis(req, res) {
                          ai_confidence = EXCLUDED.ai_confidence,
                          risk_level = EXCLUDED.risk_level,
                          affected_area_percentage = EXCLUDED.affected_area_percentage,
+                         health_score = EXCLUDED.health_score,
                          completed_at = EXCLUDED.completed_at`,
           [
             uuidv4(),
@@ -74,12 +79,33 @@ export async function createAnalysis(req, res) {
             result.ai_confidence,
             result.risk_level,
             result.affected_area_percentage,
+            result.health_score,
           ]
         )
         await query(`UPDATE analyses SET status = 'completed' WHERE id = $1`, [analysisId])
+        completeProgress(analysisId)
+
+        // Send notification email (non-blocking fail)
+        try {
+          const userRes = await dbQuery(`SELECT id, full_name, email, COALESCE(settings,'{}'::jsonb) AS settings FROM users WHERE id = $1`, [userId])
+          if (userRes.rowCount) {
+            const user = userRes.rows[0]
+            const settings = user.settings && typeof user.settings === 'object' ? user.settings : {}
+            const wantsEmail = settings?.notifications?.email !== false
+            if (wantsEmail && user.email) {
+              const analysisRes = await dbQuery(`SELECT id, location, submitted_at FROM analyses WHERE id = $1`, [analysisId])
+              const analysisRow = analysisRes.rowCount ? analysisRes.rows[0] : { id: analysisId, location }
+              const { subject, text, html } = buildAnalysisReportEmail({ user, analysis: analysisRow, result })
+              await sendMail({ to: user.email, subject, text, html })
+            }
+          }
+        } catch (mailErr) {
+          console.error('Failed to send analysis email', mailErr)
+        }
       } catch (e) {
         console.error('AI analysis failed', e)
         await query(`UPDATE analyses SET status = 'completed' WHERE id = $1`, [analysisId])
+        completeProgress(analysisId)
       }
     })()
 
@@ -97,7 +123,7 @@ export async function listAnalyses(req, res) {
   try {
     const result = await query(
       `SELECT a.id, a.status, a.location, a.area, a.soil_type, a.crop_type, a.irrigation_method, a.submitted_at,
-              ar.salinity_level, ar.ph_level, ar.moisture_percentage
+              ar.salinity_level, ar.ph_level, ar.moisture_percentage, ar.health_score
        FROM analyses a
        LEFT JOIN analysis_results ar ON ar.analysis_id = a.id
        WHERE a.user_id = $1
@@ -114,11 +140,11 @@ export async function listAnalyses(req, res) {
 export async function getAnalysisById(req, res) {
   try {
     const { id } = req.params
-    const a = await query(
-      `SELECT a.*,
+       const a = await query(
+          `SELECT a.*,
               ar.salinity_level, ar.ph_level, ar.moisture_percentage,
               ar.soil_composition, ar.chemical_properties, ar.recommendations,
-              ar.ai_confidence, ar.risk_level, ar.affected_area_percentage,
+              ar.ai_confidence, ar.risk_level, ar.affected_area_percentage, ar.health_score,
               ar.completed_at
        FROM analyses a
        LEFT JOIN analysis_results ar ON ar.analysis_id = a.id
@@ -171,5 +197,111 @@ export async function getAnalysisHistory(req, res) {
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Failed to fetch analysis history' })
+  }
+}
+
+export async function getAnalysisReportPdf(req, res) {
+  try {
+    const { id } = req.params
+    const a = await query(
+      `SELECT a.*,
+              ar.salinity_level, ar.ph_level, ar.moisture_percentage,
+              ar.soil_composition, ar.chemical_properties, ar.recommendations,
+              ar.ai_confidence, ar.risk_level, ar.affected_area_percentage, ar.health_score
+       FROM analyses a
+       LEFT JOIN analysis_results ar ON ar.analysis_id = a.id
+       WHERE a.id = $1 AND a.user_id = $2`,
+      [id, req.user.id]
+    )
+    if (a.rowCount === 0) return res.status(404).json({ error: 'Not found' })
+    const userRes = await query('SELECT id, full_name FROM users WHERE id = $1', [req.user.id])
+    const user = userRes.rowCount ? userRes.rows[0] : { id: req.user.id }
+    const pdf = await buildAnalysisPdf({ user, analysis: a.rows[0], result: a.rows[0] })
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `inline; filename="analysis_${id}.pdf"`)
+    res.send(pdf)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to build PDF' })
+  }
+}
+
+import { randomBytes } from 'crypto'
+function newToken() {
+  return randomBytes(16).toString('hex')
+}
+
+export async function toggleShare(req, res) {
+  try {
+    const { id } = req.params
+    const { enable } = req.body || {}
+    const flag = enable === true || enable === 'true' || enable === 1 || enable === '1'
+    // Ensure ownership
+    const a = await query('SELECT id, share_enabled, share_token FROM analyses WHERE id = $1 AND user_id = $2', [id, req.user.id])
+    if (a.rowCount === 0) return res.status(404).json({ error: 'Not found' })
+    let share_token = a.rows[0].share_token
+    let share_enabled = !!a.rows[0].share_enabled
+    if (flag && !share_token) share_token = newToken()
+    if (flag) share_enabled = true
+    if (!flag) share_enabled = false
+    const r = await query('UPDATE analyses SET share_enabled=$3, share_token=$2 WHERE id=$1 AND user_id = $4 RETURNING share_enabled, share_token', [id, share_token, share_enabled, req.user.id])
+    const b = r.rows[0]
+    const url = b.share_enabled && b.share_token ? `/api/public/analyses/${id}?token=${b.share_token}` : null
+    res.json({ shareEnabled: b.share_enabled, shareUrl: url })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to update sharing' })
+  }
+}
+
+export async function getShareInfo(req, res) {
+  try {
+    const { id } = req.params
+    const a = await query('SELECT share_enabled, share_token FROM analyses WHERE id = $1 AND user_id = $2', [id, req.user.id])
+    if (a.rowCount === 0) return res.status(404).json({ error: 'Not found' })
+    const b = a.rows[0]
+    const url = b.share_enabled && b.share_token ? `/api/public/analyses/${id}?token=${b.share_token}` : null
+    res.json({ shareEnabled: b.share_enabled, shareUrl: url })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to get share info' })
+  }
+}
+
+import jwt from 'jsonwebtoken'
+import { config } from '../config.js'
+import { subscribe as progressSubscribe, getProgress as progressGet } from '../services/progress.js'
+
+export async function sseProgress(req, res) {
+  try {
+    const { id } = req.params
+    // Allow auth either via header (Bearer) or via ?token=JWT
+    let userId = null
+    const authH = req.headers.authorization
+    const tokenQ = req.query.token
+    const token = authH && authH.startsWith('Bearer ') ? authH.slice(7) : tokenQ
+    if (token) {
+      try {
+        const payload = jwt.verify(token, config.jwtSecret)
+        userId = payload.sub
+      } catch {}
+    }
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+
+    // Ensure user owns the analysis
+    const own = await query('SELECT id FROM analyses WHERE id = $1 AND user_id = $2', [id, userId])
+    if (own.rowCount === 0) return res.status(404).json({ error: 'Not found' })
+
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Connection', 'keep-alive')
+    res.flushHeaders?.()
+    res.write(`retry: 2000\n\n`)
+    // Send current progress immediately
+    try { res.write(`data: ${JSON.stringify({ progress: progressGet(id) })}\n\n`) } catch {}
+    progressSubscribe(id, res)
+  } catch (err) {
+    console.error(err)
+    try { res.end() } catch {}
   }
 }

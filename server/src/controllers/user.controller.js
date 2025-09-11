@@ -1,4 +1,5 @@
 import { query } from '../db/index.js'
+import { sendMail } from '../services/email.js'
 
 export async function getCurrentUserProfile(req, res) {
   try {
@@ -154,5 +155,33 @@ export async function deleteMe(req, res) {
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Failed to delete account' })
+  }
+}
+
+export async function sendTestEmail(req, res) {
+  try {
+    const userRes = await query('SELECT id, full_name, email FROM users WHERE id = $1', [req.user.id])
+    if (userRes.rowCount === 0) return res.status(404).json({ error: 'User not found' })
+    const user = userRes.rows[0]
+    if (!user.email) return res.status(400).json({ error: 'User email is missing' })
+
+    const subject = 'EcoSoil: SMTP test'
+    const text = `Assalomu alaykum, ${user.full_name || ''}!
+
+Bu test xabari. SMTP sozlamalari to'g'ri ishlamoqda.
+
+EcoSoil`
+    const html = `<div style="font-family:Arial,sans-serif">Assalomu alaykum, ${
+      (user.full_name || '').replace(/</g, '&lt;')
+    }!<br/><br/>Bu test xabari. SMTP sozlamalari to'g'ri ishlamoqda.<br/><br/>EcoSoil</div>`
+
+    const info = await sendMail({ to: user.email, subject, text, html })
+    if (info && info.skipped) {
+      return res.json({ success: true, sent: false, message: 'SMTP not configured; email skipped (logged to console).' })
+    }
+    return res.json({ success: true, sent: true })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to send test email' })
   }
 }

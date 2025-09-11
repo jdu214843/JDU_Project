@@ -24,9 +24,9 @@ export default function RegisterPage() {
         <Typography variant="h5" fontWeight={600} gutterBottom>Create your account</Typography>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <form onSubmit={handleSubmit}>
-          <TextField label="Full Name" value={fullName} onChange={(e)=>setFullName(e.target.value)} fullWidth margin="normal" required />
-          <TextField label="Email" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} fullWidth margin="normal" required />
-          <TextField label="Password" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} fullWidth margin="normal" required />
+          <TextField label="Full Name" autoComplete="name" value={fullName} onChange={(e)=>setFullName(e.target.value)} fullWidth margin="normal" required />
+          <TextField label="Email" type="email" autoComplete="email" value={email} onChange={(e)=>setEmail(e.target.value)} fullWidth margin="normal" required />
+          <TextField label="Password" type="password" autoComplete="new-password" value={password} onChange={(e)=>setPassword(e.target.value)} fullWidth margin="normal" required />
           <Button type="submit" variant="contained" color="primary" fullWidth disabled={loading} sx={{ mt: 2 }}>
             {loading ? 'Creating account...' : 'Sign Up'}
           </Button>
@@ -36,4 +36,3 @@ export default function RegisterPage() {
     </Box>
   )
 }
-

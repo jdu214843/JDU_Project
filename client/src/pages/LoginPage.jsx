@@ -25,8 +25,8 @@ export default function LoginPage() {
         <Typography variant="h5" fontWeight={600} gutterBottom>Welcome back</Typography>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <form onSubmit={handleSubmit}>
-          <TextField label="Email" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} fullWidth margin="normal" required />
-          <TextField label="Password" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} fullWidth margin="normal" required />
+          <TextField label="Email" type="email" autoComplete="email" value={email} onChange={(e)=>setEmail(e.target.value)} fullWidth margin="normal" required />
+          <TextField label="Password" type="password" autoComplete="current-password" value={password} onChange={(e)=>setPassword(e.target.value)} fullWidth margin="normal" required />
           <Button type="submit" variant="contained" color="primary" fullWidth disabled={loading} sx={{ mt: 2 }}>
             {loading ? 'Signing in...' : 'Sign In'}
           </Button>
@@ -36,4 +36,3 @@ export default function LoginPage() {
     </Box>
   )
 }
-

@@ -4,7 +4,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { authRequired } from '../middleware/auth.js';
 import { uploadsDir } from '../util/uploads.js';
-import { createAnalysis, listAnalyses, getAnalysisById, getAnalysisHistory } from '../controllers/analysis.controller.js';
+import { createAnalysis, listAnalyses, getAnalysisById, getAnalysisHistory, getAnalysisReportPdf, toggleShare, getShareInfo, sseProgress } from '../controllers/analysis.controller.js';
 
 const router = Router();
 
@@ -30,5 +30,9 @@ router.post('/', authRequired, upload.array('images', 5), createAnalysis);
 router.get('/', authRequired, listAnalyses);
 router.get('/:id', authRequired, getAnalysisById);
 router.get('/:id/history', authRequired, getAnalysisHistory);
+router.get('/:id/report.pdf', authRequired, getAnalysisReportPdf);
+router.post('/:id/share', authRequired, toggleShare);
+router.get('/:id/share', authRequired, getShareInfo);
+router.get('/:id/progress', sseProgress);
 
 export default router;

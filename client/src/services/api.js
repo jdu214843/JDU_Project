@@ -83,6 +83,27 @@ export async function getAnalysis(id) {
   return data
 }
 
+export async function getShareInfo(id) {
+  const { data } = await api.get(`/analyses/${id}/share`)
+  return data
+}
+
+export async function setShareEnabled(id, enable) {
+  const { data } = await api.post(`/analyses/${id}/share`, { enable })
+  return data
+}
+
+export async function downloadAnalysisPdf(id) {
+  const res = await api.get(`/analyses/${id}/report.pdf`, { responseType: 'blob' })
+  return res.data
+}
+
+// Public share
+export async function getPublicAnalysis(id, token) {
+  const { data } = await api.get(`/public/analyses/${id}`, { params: { token } })
+  return data
+}
+
 // Orders
 export async function createOrder(payload) {
   const { data } = await api.post('/orders', payload)
@@ -92,4 +113,11 @@ export async function createOrder(payload) {
 export async function getAnalysisHistory(id) {
   const { data } = await api.get(`/analyses/${id}/history`)
   return data
+}
+
+export function openProgressSSE(id) {
+  const token = useAuthStore.getState().token
+  const base = import.meta.env.VITE_API_BASE || 'http://localhost:4000'
+  const url = `${base}/api/analyses/${id}/progress?token=${encodeURIComponent(token || '')}`
+  return new EventSource(url)
 }

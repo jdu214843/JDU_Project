@@ -4,10 +4,15 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function runAIAnalysis(data, images) {
-  // Simulate 45–60s random delay for processing
-  const delay = 45000 + Math.floor(Math.random() * 15000);
-  await sleep(delay);
+export async function runAIAnalysis(data, images, { onProgress } = {}) {
+  // Simulate 45–60s random delay for processing with progress callbacks
+  const totalMs = 45000 + Math.floor(Math.random() * 15000);
+  const steps = Math.max(45, Math.floor(totalMs / 1000));
+  for (let i = 0; i < steps; i++) {
+    const pct = Math.round(((i + 1) / steps) * 100);
+    if (typeof onProgress === 'function') onProgress(Math.min(99, pct));
+    await sleep(totalMs / steps);
+  }
 
   // Produce consistent but varied mock results based on a hash of location/crop
   const base = (data.location || 'loc') + (data.crop_type || 'crop');
@@ -54,6 +59,22 @@ export async function runAIAnalysis(data, images) {
   else if (salinity >= 1.5) risk_level = "O'rtacha xavf";
   const affected_area_percentage = Number(rand(25, 75).toFixed(1));
 
+  // Compute Soil Health Score (0-100). Simple weighted heuristic.
+  function clip(n, min, max) { return Math.max(min, Math.min(max, n)) }
+  const phScore = 100 - (Math.abs(ph - 7) / 7) * 100; // best at 7
+  const salScore = 100 - clip((salinity / 3.5) * 100, 0, 100); // lower salinity better
+  const moistScore = clip((moisture / 60) * 100, 0, 100); // 60% as upper practical bound
+  const omScore = clip((organicMatter / 4.5) * 100, 0, 100); // 4.5% good
+  const nScore = clip((nitrogenPct / 0.2) * 100, 0, 100);
+  const pScore = clip((phosphorusPct / 0.12) * 100, 0, 100);
+  const health_score = Number((
+    phScore * 0.22 +
+    salScore * 0.24 +
+    moistScore * 0.18 +
+    omScore * 0.18 +
+    ((nScore + pScore) / 2) * 0.18
+  ).toFixed(0));
+
   return {
     ph_level: ph,
     salinity_level: salinity,
@@ -64,5 +85,6 @@ export async function runAIAnalysis(data, images) {
     ai_confidence,
     risk_level,
     affected_area_percentage,
+    health_score,
   };
 }

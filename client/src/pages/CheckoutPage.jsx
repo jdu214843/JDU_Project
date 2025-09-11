@@ -5,7 +5,8 @@ import { Elements, CardElement, useElements, useStripe } from '@stripe/react-str
 import { loadStripe } from '@stripe/stripe-js'
 import { api } from '../services/api'
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
+const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+const stripePromise = publishableKey ? loadStripe(publishableKey) : null
 
 const PLANS = {
   starter: { id: 'starter', name: 'Starter', price: "500,000 so'm/oy", amount: 500000 },
@@ -105,4 +106,3 @@ export default function CheckoutPage() {
     </Container>
   )
 }
-

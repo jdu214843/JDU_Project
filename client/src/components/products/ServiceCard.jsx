@@ -3,6 +3,7 @@ import { Card, CardContent, Box, Typography, Button, List, ListItem, ListItemIco
 import SyncAltIcon from '@mui/icons-material/SyncAlt'
 import ModelTrainingIcon from '@mui/icons-material/ModelTraining'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { useI18n } from '../../i18n/translate'
 
 const ICONS = {
   SyncAlt: <SyncAltIcon color="primary" />,
@@ -10,6 +11,7 @@ const ICONS = {
 }
 
 export default function ServiceCard({ service }) {
+  const { t } = useI18n()
   const { icon, title, description, features = [] } = service
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -32,10 +34,9 @@ export default function ServiceCard({ service }) {
       </CardContent>
       <Box sx={{ p: 2, pt: 0 }}>
         <Button fullWidth variant="contained" color="success" sx={{ textTransform: 'none' }}>
-          Batafsil ma'lumot
+          {t('products.more')}
         </Button>
       </Box>
     </Card>
   )
 }
-

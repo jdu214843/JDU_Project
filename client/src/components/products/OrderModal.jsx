@@ -2,12 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Dialog, DialogTitle, DialogContent, DialogActions, Typography, TextField, MenuItem, Button, Box, Alert } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { createOrder } from '../../services/api'
+import { useI18n } from '../../i18n/translate'
 
 const REGIONS = [
   'Toshkent', 'Samarqand', 'Buxoro', 'Farg‘ona', 'Andijon', 'Namangan', 'Qashqadaryo', 'Surxondaryo', 'Jizzax', 'Sirdaryo', 'Xorazm', 'Navoiy', 'Qoraqalpog‘iston'
 ]
 
 export default function OrderModal({ open, onClose, product }) {
+  const { t } = useI18n()
   const [view, setView] = useState('form') // 'form' | 'success'
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -62,30 +64,30 @@ export default function OrderModal({ open, onClose, product }) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        {view === 'form' ? 'Buyurtma berish' : 'Buyurtma berildi'}
+        {view === 'form' ? t('order.title') : t('order.placed')}
       </DialogTitle>
       <DialogContent>
         {view === 'form' && (
           <>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Mahsulot: <strong>{product.name}</strong>
+              {t('order.product')}: <strong>{product.name}</strong>
             </Typography>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
               <TextField
-                label="To'liq ism"
+                label={t('order.fullName')}
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 fullWidth
               />
               <TextField
-                label="Telefon"
+                label={t('order.phone')}
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 fullWidth
               />
               <TextField
-                label="Viloyat"
+                label={t('order.region')}
                 select
                 value={formData.region}
                 onChange={(e) => setFormData({ ...formData, region: e.target.value })}
@@ -96,7 +98,7 @@ export default function OrderModal({ open, onClose, product }) {
                 ))}
               </TextField>
               <TextField
-                label="Soni"
+                label={t('order.quantity')}
                 select
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
@@ -107,7 +109,7 @@ export default function OrderModal({ open, onClose, product }) {
                 ))}
               </TextField>
               <TextField
-                label="Manzil"
+                label={t('order.address')}
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 fullWidth
@@ -121,23 +123,22 @@ export default function OrderModal({ open, onClose, product }) {
 
         {view === 'success' && (
           <Alert icon={<CheckCircleIcon fontSize="inherit" />} severity="success">
-            Buyurtmangiz qabul qilindi. Tez orada siz bilan bog'lanamiz.
+            {t('order.success')}
           </Alert>
         )}
       </DialogContent>
       <DialogActions>
         {view === 'form' ? (
           <>
-            <Button onClick={onClose} disabled={submitting}>Bekor qilish</Button>
+            <Button onClick={onClose} disabled={submitting}>{t('order.cancel')}</Button>
             <Button variant="contained" color="success" onClick={handleSubmit} disabled={submitting}>
-              {submitting ? 'Yuborilmoqda...' : 'Buyurtma berish'}
+              {submitting ? t('order.submitting') : t('order.submit')}
             </Button>
           </>
         ) : (
-          <Button onClick={onClose}>Yopish</Button>
+          <Button onClick={onClose}>{t('order.close')}</Button>
         )}
       </DialogActions>
     </Dialog>
   )
 }
-

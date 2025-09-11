@@ -1,12 +1,14 @@
 import React from 'react'
 import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material'
+import { useI18n } from '../i18n/translate'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
 export default function HelpCenterPage() {
+  const { t } = useI18n()
   const faqs = [
-    { q: 'How long does analysis take?', a: 'Typically about 1 minute as we simulate AI processing.' },
-    { q: 'What images should I upload?', a: 'Clear photos of the soil surface and a small dug profile.' },
-    { q: 'Can I edit my profile?', a: 'Yes, use the Dashboard → Profile tab.' },
+    { q: t('help.q1'), a: t('help.a1') },
+    { q: t('help.q2'), a: t('help.a2') },
+    { q: t('help.q3'), a: t('help.a3') },
   ]
 
   return (
@@ -24,4 +26,3 @@ export default function HelpCenterPage() {
     </div>
   )
 }
-

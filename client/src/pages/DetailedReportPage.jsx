@@ -18,7 +18,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis
 import ReportHistoryTab from '../components/reports/ReportHistoryTab'
 import ReportCompositionTab from '../components/reports/ReportCompositionTab'
 import SummaryCard from '../components/reports/SummaryCard'
-import { useI18n } from '../i18n'
+import { useI18n } from '../i18n/translate'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28']
 
@@ -90,7 +90,17 @@ export default function DetailedReportPage() {
     if (cond === 'Quyoshli') return <WbSunnyIcon color="warning" />
     if (cond === 'Yomg‘irli') return <OpacityIcon color="primary" />
     if (cond === 'Bulutli') return <CloudIcon color="action" />
+    if (cond === 'Yarim bulutli') return <CloudQueueIcon color="action" />
     return <CloudQueueIcon color="action" />
+  }
+  const weatherLabel = (cond) => {
+    const map = {
+      'Quyoshli': t('weather.sunny'),
+      "Yomg‘irli": t('weather.rainy'),
+      'Bulutli': t('weather.cloudy'),
+      'Yarim bulutli': t('weather.partly'),
+    }
+    return map[cond] || cond || '—'
   }
 
   if (loading) return <Loader />
@@ -125,7 +135,7 @@ export default function DetailedReportPage() {
       await navigator.clipboard.writeText(webShare)
       alert(t('report.copied'))
     } catch (e) {
-      window.prompt('Ulashish linkini qo\'lda nusxa oling:', webShare)
+      window.prompt(`${t('share.link')}:`, webShare)
     }
   }
 
@@ -184,11 +194,17 @@ export default function DetailedReportPage() {
 
       {/* Tabs */}
       <Tabs value={tab} onChange={(_,v)=>setTab(v)} sx={{ mb: 2 }}>
-        <Tab label="Umumiy" />
-        <Tab label="Tarkib" />
-        <Tab label="Tavsiyalar" />
-        <Tab label="AI tahlili" />
-        <Tab label="Tarix" />
+        {Array.isArray(t('detailed.tabs')) ? t('detailed.tabs').map((label, idx) => (
+          <Tab key={idx} label={label} />
+        )) : (
+          <>
+            <Tab label="Overview" />
+            <Tab label="Composition" />
+            <Tab label="Recommendations" />
+            <Tab label="AI" />
+            <Tab label="History" />
+          </>
+        )}
       </Tabs>
 
       {tab === 0 && (
@@ -197,22 +213,22 @@ export default function DetailedReportPage() {
           <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
-                <Typography variant="h6" gutterBottom>Lokatsiya ma'lumotlari</Typography>
+                <Typography variant="h6" gutterBottom>{t('detailed.locationTitle')}</Typography>
                 <Grid container spacing={1} sx={{ mb: 2 }}>
                   <Grid item xs={12}>
                     <List dense>
-                      <ListItem><ListItemText primary="Manzil" secondary={data.location || '—'} /></ListItem>
-                      <ListItem><ListItemText primary="Maydon" secondary={data.area ? `${data.area} ha` : '—'} /></ListItem>
-                      <ListItem><ListItemText primary="Balandlik" secondary={'—'} /></ListItem>
-                      <ListItem><ListItemText primary="Koordinatalar" secondary={'—'} /></ListItem>
+                      <ListItem><ListItemText primary={t('detailed.address')} secondary={data.location || '—'} /></ListItem>
+                      <ListItem><ListItemText primary={t('detailed.area')} secondary={data.area ? `${data.area} ha` : '—'} /></ListItem>
+                      <ListItem><ListItemText primary={t('detailed.altitude')} secondary={'—'} /></ListItem>
+                      <ListItem><ListItemText primary={t('detailed.coords')} secondary={'—'} /></ListItem>
                     </List>
                   </Grid>
                 </Grid>
-                <Typography variant="subtitle1" gutterBottom>Ob-havo sharoiti</Typography>
+                <Typography variant="subtitle1" gutterBottom>{t('detailed.weatherTitle')}</Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   {weatherIcon(data?.weather?.condition)}
                   <Typography variant="body2" color="text.secondary">
-                    {data?.weather?.condition || '—'} | Harorat: {data?.weather?.temperature ?? '—'}°C, Shamol: {data?.weather?.wind_speed ?? '—'} km/soat, Namlik: {data?.weather?.humidity ?? '—'}%
+                    {weatherLabel(data?.weather?.condition)} | {t('detailed.temperature')}: {data?.weather?.temperature ?? '—'}°C, {t('detailed.wind')}: {data?.weather?.wind_speed ?? '—'} {t('detailed.windUnit')}, {t('detailed.humidity')}: {data?.weather?.humidity ?? '—'}%
                   </Typography>
                 </Box>
               </CardContent>
@@ -223,16 +239,16 @@ export default function DetailedReportPage() {
           <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
-                <Typography variant="h6" gutterBottom>Sho'rlanish tahlili</Typography>
+                <Typography variant="h6" gutterBottom>{t('detailed.salinityTitle')}</Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                   <Chip label={`${data.salinity_level ?? '—'}% - ${salinitySeverity.label}`} color={salinitySeverity.color} />
                   {data?.risk_level && <Chip label={`Xavf darajasi: ${data.risk_level}`} color={salinitySeverity.color} variant="outlined" />}
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  Ta'sirlangan hudud: {data?.affected_area_percentage ?? '—'}%
+                  {t('detailed.affected')}: {data?.affected_area_percentage ?? '—'}%
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  Sho'rlanish darajasi: {data?.salinity_level ?? '—'}%
+                  {t('detailed.salinityLevel')}: {data?.salinity_level ?? '—'}%
                 </Typography>
                 <Box sx={{ mt: 1 }}>
                   <LinearProgress variant="determinate" value={Math.min(100, Math.max(0, Math.round(((Number(data?.salinity_level) || 0) / 5) * 100)))} />

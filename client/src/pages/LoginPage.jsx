@@ -2,11 +2,13 @@ import React, { useState } from 'react'
 import { Box, Paper, Typography, TextField, Button, Alert } from '@mui/material'
 import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom'
 import useAuthStore from '../store/auth'
+import { useI18n } from '../i18n/translate'
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { login, loading, error } = useAuthStore()
+  const { t } = useI18n()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
@@ -22,16 +24,16 @@ export default function LoginPage() {
   return (
     <Box maxWidth={480} mx="auto">
       <Paper elevation={0} sx={{ p: 3 }}>
-        <Typography variant="h5" fontWeight={600} gutterBottom>Welcome back</Typography>
+        <Typography variant="h5" fontWeight={600} gutterBottom>{t('auth.loginTitle')}</Typography>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <form onSubmit={handleSubmit}>
-          <TextField label="Email" type="email" autoComplete="email" value={email} onChange={(e)=>setEmail(e.target.value)} fullWidth margin="normal" required />
-          <TextField label="Password" type="password" autoComplete="current-password" value={password} onChange={(e)=>setPassword(e.target.value)} fullWidth margin="normal" required />
+          <TextField label={t('auth.email')} type="email" autoComplete="email" value={email} onChange={(e)=>setEmail(e.target.value)} fullWidth margin="normal" required />
+          <TextField label={t('auth.password')} type="password" autoComplete="current-password" value={password} onChange={(e)=>setPassword(e.target.value)} fullWidth margin="normal" required />
           <Button type="submit" variant="contained" color="primary" fullWidth disabled={loading} sx={{ mt: 2 }}>
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? '...' : t('auth.signIn')}
           </Button>
         </form>
-        <Typography variant="body2" sx={{ mt: 2 }}>No account? <RouterLink to="/register">Create one</RouterLink></Typography>
+        <Typography variant="body2" sx={{ mt: 2 }}>{t('auth.noAccount')} <RouterLink to="/register">{t('auth.createOne')}</RouterLink></Typography>
       </Paper>
     </Box>
   )

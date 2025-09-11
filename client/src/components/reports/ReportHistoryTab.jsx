@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { Box, Card, CardContent, Typography, Alert } from '@mui/material'
+import { useI18n } from '../../i18n/translate'
 import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line } from 'recharts'
 import Loader from '../Loader'
 import { getAnalysisHistory } from '../../services/api'
 
 export default function ReportHistoryTab({ analysisId }) {
+  const { t } = useI18n()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [history, setHistory] = useState([])
@@ -32,13 +34,13 @@ export default function ReportHistoryTab({ analysisId }) {
   return (
     <Card>
       <CardContent>
-        <Typography variant="h6" gutterBottom>Sho'rlanish dinamikasi</Typography>
-        <Typography variant="body2" color="text.secondary" gutterBottom>So'nggi 4 oylik o'zgarishlar</Typography>
+        <Typography variant="h6" gutterBottom>{t('history.title')}</Typography>
+        <Typography variant="body2" color="text.secondary" gutterBottom>{t('history.subtitle')}</Typography>
 
         {loading && <Loader />}
         {!loading && error && <Alert severity="error">{error}</Alert>}
         {!loading && !error && history.length === 0 && (
-          <Alert severity="info">Tarixiy ma'lumotlar topilmadi</Alert>
+          <Alert severity="info">{t('history.none')}</Alert>
         )}
         {!loading && !error && history.length > 0 && (
           <Box sx={{ height: 320 }}>

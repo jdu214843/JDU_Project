@@ -6,8 +6,10 @@ import ServiceCard from '../components/products/ServiceCard'
 import FaqTab from '../components/products/FaqTab'
 import SensorDetailsModal from '../components/products/SensorDetailsModal'
 import OrderModal from '../components/products/OrderModal'
+import { useI18n } from '../i18n/translate'
 
 export default function TechnologiesPage() {
+  const { t } = useI18n()
   const [activeTab, setActiveTab] = useState('sensorlar')
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedSensor, setSelectedSensor] = useState(null)
@@ -167,16 +169,16 @@ export default function TechnologiesPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
-      <Typography variant="h5" fontWeight={700} gutterBottom>Zamonaviy Qishloq Xo'jaligi Texnikalari</Typography>
+      <Typography variant="h5" fontWeight={700} gutterBottom>{t('tech.title')}</Typography>
       <Typography variant="body2" color="text.secondary" gutterBottom>
-        IoT sensorlarimiz yordamida dala va issiqxonangizni aniq kuzating
+        {t('tech.subtitle')}
       </Typography>
 
       <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ mb: 3 }}>
-        <Tab label="Sensorlar" value="sensorlar" />
-        <Tab label="Xizmatlar" value="xizmatlar" />
-        <Tab label="Tariflar" value="tariflar" />
-        <Tab label="Savol-Javob" value="savol-javob" />
+        <Tab label={t('tech.tabs.sensors')} value="sensorlar" />
+        <Tab label={t('tech.tabs.services')} value="xizmatlar" />
+        <Tab label={t('tech.tabs.pricing')} value="tariflar" />
+        <Tab label={t('tech.tabs.faq')} value="savol-javob" />
       </Tabs>
 
       {activeTab === 'sensorlar' && (

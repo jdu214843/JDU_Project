@@ -4,12 +4,14 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import SaveIcon from '@mui/icons-material/Save'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import { updateMe } from '../../services/api'
+import { useI18n } from '../../i18n/translate'
 
 const REGIONS = [
   'Toshkent', 'Samarqand', 'Buxoro', 'Farg‘ona', 'Andijon', 'Namangan', 'Qashqadaryo', 'Surxondaryo', 'Jizzax', 'Sirdaryo', 'Xorazm', 'Navoiy', 'Qoraqalpog‘iston'
 ]
 
 export default function ProfileTab({ user, onUpdated }) {
+  const { t } = useI18n()
   const [form, setForm] = useState({
     fullName: user?.fullName || '',
     email: user?.email || '',
@@ -45,17 +47,17 @@ export default function ProfileTab({ user, onUpdated }) {
         {/* Title with icon */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
           <PersonOutlineIcon color="action" />
-          <Typography variant="h6" fontWeight={600}>Profil Ma'lumotlari</Typography>
+          <Typography variant="h6" fontWeight={600}>{t('profile.title')}</Typography>
         </Box>
 
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>Profile updated</Alert>}
+        {success && <Alert severity="success" sx={{ mb: 2 }}>{t('profile.saved')}</Alert>}
 
         {/* Two-column form layout */}
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <TextField
-              label="To'liq ism"
+              label={t('profile.fullName')}
               value={form.fullName}
               onChange={(e)=>setForm({...form, fullName: e.target.value})}
               fullWidth
@@ -63,7 +65,7 @@ export default function ProfileTab({ user, onUpdated }) {
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
-              label="Email manzil"
+              label={t('profile.email')}
               value={form.email}
               fullWidth
               disabled
@@ -71,7 +73,7 @@ export default function ProfileTab({ user, onUpdated }) {
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
-              label="Telefon raqam"
+              label={t('profile.phone')}
               value={form.phoneNumber}
               onChange={(e)=>setForm({...form, phoneNumber: e.target.value})}
               fullWidth
@@ -79,7 +81,7 @@ export default function ProfileTab({ user, onUpdated }) {
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
-              label="Viloyatingizni tanlang"
+              label={t('profile.region')}
               select
               value={form.region}
               onChange={(e)=>setForm({...form, region: e.target.value})}
@@ -97,7 +99,7 @@ export default function ProfileTab({ user, onUpdated }) {
           </Grid>
           <Grid item xs={12}>
             <TextField
-              label="Bio"
+              label={t('profile.bio')}
               value={form.bio}
               onChange={(e)=>setForm({...form, bio: e.target.value})}
               fullWidth
@@ -114,7 +116,7 @@ export default function ProfileTab({ user, onUpdated }) {
                 disabled={saving}
                 sx={{ backgroundColor: '#212529', '&:hover': { backgroundColor: '#1b1f22' } }}
               >
-                {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+                {saving ? t('profile.saving') : t('profile.save')}
               </Button>
             </Box>
           </Grid>

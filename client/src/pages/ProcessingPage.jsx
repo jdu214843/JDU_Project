@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Box, Paper, Typography, LinearProgress } from '@mui/material'
-import { useI18n } from '../i18n'
+import { useI18n } from '../i18n/translate'
 import { getAnalysis, openProgressSSE } from '../services/api'
 
 export default function ProcessingPage() {

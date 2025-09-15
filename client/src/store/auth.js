@@ -29,7 +29,9 @@ const useAuthStore = create(
           set({ token: res.token, user: res.user, loading: false })
           return res
         } catch (e) {
-          set({ loading: false, error: e.response?.data?.error || 'Login failed' })
+          console.error('Login error in store:', e)
+          const errorMessage = e.response?.data?.error || e.message || 'Login failed'
+          set({ loading: false, error: errorMessage })
           throw e
         }
       },
@@ -40,7 +42,9 @@ const useAuthStore = create(
           set({ token: res.token, user: res.user, loading: false })
           return res
         } catch (e) {
-          set({ loading: false, error: e.response?.data?.error || 'Registration failed' })
+          console.error('Register error in store:', e)
+          const errorMessage = e.response?.data?.error || e.message || 'Registration failed'
+          set({ loading: false, error: errorMessage })
           throw e
         }
       },

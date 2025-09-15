@@ -11,19 +11,6 @@ function toNum(n, d=1) {
   return Number(n).toFixed(d) 
 }
 
-function safeMoveDown(doc, amount = 1) {
-  try {
-    // Ensure current position is valid
-    if (isNaN(doc.y) || doc.y < 0) {
-      doc.y = 40 // Reset to margin
-    }
-    doc.moveDown(amount)
-  } catch (e) {
-    console.log('moveDown error, manually adjusting position')
-    doc.y = (doc.y || 40) + (amount * 12) // Approximate line height
-  }
-}
-
 export async function buildAnalysisPdf({ user, analysis, result }) {
   try {
     console.log('Building PDF for analysis:', analysis?.id)
@@ -36,14 +23,14 @@ export async function buildAnalysisPdf({ user, analysis, result }) {
 
   // Header
   doc.fontSize(20).text('EcoSoil — Analiz Hisoboti', { align: 'left' })
-  safeMoveDown(doc, 0.5)
+  doc.moveDown(0.5)
   doc.fontSize(10).fillColor('#555').text(new Date().toLocaleString())
-  safeMoveDown(doc, 0.5)
+  doc.moveDown(0.5)
   if (user?.full_name || user?.fullName) {
     doc.fontSize(11).fillColor('#111').text(`Foydalanuvchi: ${user.full_name || user.fullName}`)
   }
   doc.fontSize(11).text(`Joy: ${analysis.location || '-'}`)
-  safeMoveDown(doc, 0.5)
+  doc.moveDown(0.5)
 
   // Summary cards
   const y0 = doc.y
@@ -67,8 +54,7 @@ export async function buildAnalysisPdf({ user, analysis, result }) {
     doc.fontSize(10).fillColor('#777').text(c.label, x + 10, y0 + 10)
     doc.fontSize(18).fillColor('#111').text(c.value, x + 10, y0 + 28)
   })
-  // Safely move down
-  safeMoveDown(doc, 5)
+  doc.moveDown(5)
 
   // Risk + Confidence
   doc.fontSize(12).fillColor('#111').text(`Xavf darajasi: ${result?.risk_level || '-'}`)
@@ -78,8 +64,7 @@ export async function buildAnalysisPdf({ user, analysis, result }) {
   if (result?.affected_area_percentage != null && !isNaN(Number(result.affected_area_percentage))) {
     doc.text(`Ta'sirlangan maydon: ${toNum(result.affected_area_percentage, 1)}%`)
   }
-  
-  safeMoveDown(doc, 0.5)
+  doc.moveDown(0.5)
 
   // Composition table
   doc.fontSize(12).text('Tarkib (taxminiy):')
@@ -112,7 +97,7 @@ export async function buildAnalysisPdf({ user, analysis, result }) {
     doc.fontSize(11).fillColor('#111').text(row[0], tx + 8, y + 6)
     doc.text(row[1], tx + tw - 80, y + 6, { width: 72, align: 'right' })
   })
-  safeMoveDown(doc, 3)
+  doc.moveDown(3)
 
   // Chemical properties
   let chemProps = []
@@ -134,7 +119,7 @@ export async function buildAnalysisPdf({ user, analysis, result }) {
         doc.fontSize(11).text(`- ${c.name}: ${c.value} (${c.status})`)
       }
     })
-    safeMoveDown(doc, 0.5)
+    doc.moveDown(0.5)
   }
 
   // Recommendations
@@ -153,37 +138,24 @@ export async function buildAnalysisPdf({ user, analysis, result }) {
   if (Array.isArray(recommendations) && recommendations.length > 0) {
     doc.fontSize(12).text('Tavsiyalar:')
     recommendations.forEach((r) => doc.fontSize(11).text(`• ${r}`))
-    safeMoveDown(doc, 0.5)
+    doc.moveDown(0.5)
   }
 
   // QR code to web report (if available)
   if (config.webBaseUrl) {
-    try {
-      const url = `${config.webBaseUrl}/analyses/${analysis.id}`
-      const qrPng = await QRCode.toBuffer(url, { margin: 1, width: 96 })
-      safeMoveDown(doc, 1)
-      doc.fontSize(10).fillColor('#555').text('To\'liq hisobot:')
-      
-      // Ensure coordinates are valid numbers
-      let x = doc.x || 40
-      let y = doc.y || 40
-      
-      if (isNaN(x)) x = 40
-      if (isNaN(y)) y = 40
-      
-      console.log('QR coordinates:', { x, y })
-      
-      doc.image(qrPng, x, y, { width: 96, height: 96 })
-      doc.link(x + 110, y + 40, 300, 12, url)
-      doc.fillColor('#2a6').text(url, x + 110, y + 40, { underline: true })
-    } catch (qrError) {
-      console.log('QR code generation failed:', qrError)
-      // Skip QR code if it fails
-    }
+    const url = `${config.webBaseUrl}/analyses/${analysis.id}`
+    const qrPng = await QRCode.toBuffer(url, { margin: 1, width: 96 })
+    doc.moveDown(1)
+    doc.fontSize(10).fillColor('#555').text('To\'liq hisobot:')
+    const x = doc.x
+    const y = doc.y
+    doc.image(qrPng, x, y, { width: 96, height: 96 })
+    doc.link(x + 110, y + 40, 300, 12, url)
+    doc.fillColor('#2a6').text(url, x + 110, y + 40, { underline: true })
   }
 
   // Footer
-  safeMoveDown(doc, 2)
+  doc.moveDown(2)
   doc.fillColor('#888').fontSize(9).text('© EcoSoil — Avtomatik tahlil hisobot', { align: 'center' })
 
   doc.end()

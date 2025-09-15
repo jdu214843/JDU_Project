@@ -76,9 +76,9 @@ if (process.env.NODE_ENV === 'production') {
 // Export for Vercel serverless functions
 export default app;
 
-// For local development
-if (process.env.NODE_ENV !== 'production') {
+// Start server (both development and production)
+if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`EcoSoil server running on http://localhost:${PORT}`);
+    console.log(`EcoSoil server running on port ${PORT}`);
   });
 }

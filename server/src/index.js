@@ -22,7 +22,8 @@ app.use(cors({
   origin: [
     'http://localhost:5173', // Local development
     'https://frontend-git-9-deploy-to-vercel-beks-projects-b6aad7c5.vercel.app', // Production frontend
-    /\.vercel\.app$/ // Any Vercel domain
+    /\.vercel\.app$/, // Any Vercel domain
+    /\.onrender\.com$/ // Any Render domain
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

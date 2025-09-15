@@ -26,9 +26,22 @@ app.use(express.urlencoded({ extended: true }));
 ensureUploadsDir();
 app.use('/uploads', express.static(publicUploadPath));
 
+// Serve static files from React build (production only)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+if (process.env.NODE_ENV === 'production') {
+  // Serve React build files
+  app.use(express.static(path.join(__dirname, '../public')));
+}
+
 // Routes
 app.get('/', (req, res) => {
-  res.json({ ok: true, name: 'EcoSoil API', version: '0.1.0' });
+  if (process.env.NODE_ENV === 'production') {
+    res.sendFile(path.join(__dirname, '../public', 'index.html'));
+  } else {
+    res.json({ ok: true, name: 'EcoSoil API', version: '0.1.0' });
+  }
 });
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -41,6 +54,13 @@ app.use('/api/public', publicRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ ok: true });
 });
+
+// Catch all handler for React Router (production only)
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'index.html'));
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`EcoSoil server running on http://localhost:${PORT}`);

@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "deploy:local": "./deploy.sh",
+    "build": "cd client && npm run build",
+    "start:prod": "cd server && NODE_ENV=production npm start",
+    "migrate:prod": "cd server && NODE_ENV=production npm run migrate"
+  }
+}

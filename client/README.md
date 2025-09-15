@@ -14,6 +14,12 @@ Features
 - Analysis wizard: 3 steps, up to 5 images, previews
 - Processing page: countdown + polling
 - Results + Detailed pages: metrics, charts (Recharts), recommendations, tabs
+- Share & PDF:
+  - Detailed Report page: toggle sharing, copy share link
+  - Download polished PDF report
+  - Public share page: `/share/:id?token=...` (read-only)
+- i18n: UZ/RU/EN til switcher (Navbar)
+- PWA: offline caching (vite-plugin-pwa), auto SW update
 - Dashboard: Profile edit, Analysis history, Settings toggles
 - Static pages: Home, Technologies, Help Center (FAQ)
 
@@ -24,4 +30,3 @@ Structure
 - `src/store/` Zustand stores
 - `src/services/` Axios API client
 - `src/layouts/` Main layout
-

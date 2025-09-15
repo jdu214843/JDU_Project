@@ -22,22 +22,24 @@ app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Ensure uploads dir exists and serve statics
+// Ensure uploads dir exists and serve statics (skip in serverless)
 ensureUploadsDir();
-app.use('/uploads', express.static(publicUploadPath));
+if (!process.env.VERCEL) {
+  app.use('/uploads', express.static(publicUploadPath));
+}
 
 // Serve static files from React build (production only)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-if (process.env.NODE_ENV === 'production') {
-  // Serve React build files
+if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+  // Serve React build files (not in serverless)
   app.use(express.static(path.join(__dirname, '../public')));
 }
 
 // Routes
 app.get('/', (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
   } else {
     res.json({ ok: true, name: 'EcoSoil API', version: '0.1.0' });

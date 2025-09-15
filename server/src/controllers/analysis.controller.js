@@ -203,6 +203,8 @@ export async function getAnalysisHistory(req, res) {
 export async function getAnalysisReportPdf(req, res) {
   try {
     const { id } = req.params
+    console.log('PDF Request for analysis:', id, 'by user:', req.user.id)
+    
     const a = await query(
       `SELECT a.*,
               ar.salinity_level, ar.ph_level, ar.moisture_percentage,
@@ -213,16 +215,27 @@ export async function getAnalysisReportPdf(req, res) {
        WHERE a.id = $1 AND a.user_id = $2`,
       [id, req.user.id]
     )
-    if (a.rowCount === 0) return res.status(404).json({ error: 'Not found' })
+    
+    if (a.rowCount === 0) {
+      console.log('Analysis not found:', id)
+      return res.status(404).json({ error: 'Not found' })
+    }
+    
+    console.log('Analysis found, building PDF...')
     const userRes = await query('SELECT id, full_name FROM users WHERE id = $1', [req.user.id])
     const user = userRes.rowCount ? userRes.rows[0] : { id: req.user.id }
+    
+    console.log('Analysis data:', JSON.stringify(a.rows[0], null, 2))
+    
     const pdf = await buildAnalysisPdf({ user, analysis: a.rows[0], result: a.rows[0] })
+    console.log('PDF generated successfully, size:', pdf.length)
+    
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', `inline; filename="analysis_${id}.pdf"`)
     res.send(pdf)
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to build PDF' })
+    console.error('PDF Generation Error:', err)
+    res.status(500).json({ error: 'Failed to build PDF: ' + err.message })
   }
 }
 

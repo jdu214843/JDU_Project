@@ -14,11 +14,28 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    console.log('Login attempt:', { email, password })
+    
+    // Timeout after 10 seconds
+    const timeoutId = setTimeout(() => {
+      console.warn('Login timeout - resetting loading state')
+      // Force reset loading state if it takes too long
+      const { loading } = useAuthStore.getState()
+      if (loading) {
+        useAuthStore.setState({ loading: false, error: 'Request timeout. Please try again.' })
+      }
+    }, 10000)
+    
     try {
-      await login({ email, password })
+      const result = await login({ email, password })
+      console.log('Login success:', result)
+      clearTimeout(timeoutId)
       const from = location.state?.from?.pathname || '/'
       navigate(from)
-    } catch {}
+    } catch (err) {
+      console.error('Login error:', err)
+      clearTimeout(timeoutId)
+    }
   }
 
   return (

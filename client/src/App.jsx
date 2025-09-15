@@ -21,10 +21,13 @@ import ProtectedRoute from './components/ProtectedRoute'
 import NetworkBanner from './components/NetworkBanner'
 import GlobalSnackbar from './components/GlobalSnackbar'
 import useAppStore from './store/app'
+import useAuthStore from './store/auth'
 import { useEffect } from 'react'
 
 export default function App() {
   const { setOnline } = useAppStore()
+  const { token } = useAuthStore()
+  
   useEffect(() => {
     const on = () => setOnline(true)
     const off = () => setOnline(false)
@@ -32,6 +35,7 @@ export default function App() {
     window.addEventListener('offline', off)
     return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off) }
   }, [])
+  
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -40,7 +44,8 @@ export default function App() {
       </Container>
       <Routes>
         <Route element={<MainLayout />}>
-          <Route index element={<HomePage />} />
+          <Route index element={token ? <HomePage /> : <Navigate to="/login" replace />} />
+          <Route path="/home" element={token ? <HomePage /> : <Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/share/:id" element={<PublicSharePage />} />

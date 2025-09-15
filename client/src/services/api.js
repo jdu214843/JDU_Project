@@ -20,9 +20,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (error) => {
+    console.error('API Error:', error)
     const pushError = useAppStore.getState().pushError
     if (!error.response) {
-      pushError('Cannot connect to the server. Please try again.')
+      const message = 'Cannot connect to the server. Please check if the server is running.'
+      pushError(message)
+      error.message = message
     } else if (error.response?.data?.error) {
       // Surface server-provided error in a friendly snackbar
       pushError(error.response.data.error)

@@ -14,10 +14,27 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    console.log('Register attempt:', { fullName, email, password })
+    
+    // Timeout after 10 seconds
+    const timeoutId = setTimeout(() => {
+      console.warn('Register timeout - resetting loading state')
+      // Force reset loading state if it takes too long
+      const { loading } = useAuthStore.getState()
+      if (loading) {
+        useAuthStore.setState({ loading: false, error: 'Request timeout. Please try again.' })
+      }
+    }, 10000)
+    
     try {
-      await register({ fullName, email, password })
+      const result = await register({ fullName, email, password })
+      console.log('Register success:', result)
+      clearTimeout(timeoutId)
       navigate('/')
-    } catch {}
+    } catch (err) {
+      console.error('Register error:', err)
+      clearTimeout(timeoutId)
+    }
   }
 
   return (

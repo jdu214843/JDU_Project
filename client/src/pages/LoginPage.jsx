@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Box, Paper, Typography, TextField, Button, Alert } from '@mui/material'
 import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom'
 import useAuthStore from '../store/auth'
@@ -11,6 +11,14 @@ export default function LoginPage() {
   const { t } = useI18n()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
+  // Reset loading state on component mount in case it got stuck
+  useEffect(() => {
+    if (loading) {
+      console.log('Resetting stuck loading state')
+      useAuthStore.setState({ loading: false, error: null })
+    }
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()

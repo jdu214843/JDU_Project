@@ -3,6 +3,8 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import { ensureUploadsDir, publicUploadPath } from './util/uploads.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
@@ -10,6 +12,7 @@ import analysisRoutes from './routes/analyses.js';
 import orderRoutes from './routes/orders.js';
 import subscriptionRoutes from './routes/subscriptions.js';
 import publicRoutes from './routes/public.js';
+import adminRoutes from './routes/admin.js';
 
 // Load env
 dotenv.config();
@@ -61,6 +64,7 @@ app.use('/api/analyses', analysisRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/public', publicRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health
 app.get('/api/health', (req, res) => {
@@ -74,12 +78,46 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+// Create HTTP server and Socket.io
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: [
+      'http://localhost:5173',
+      'https://frontend-git-9-deploy-to-vercel-beks-projects-b6aad7c5.vercel.app',
+      /\.vercel\.app$/,
+      /\.onrender\.com$/
+    ],
+    methods: ['GET', 'POST']
+  }
+});
+
+// Socket.io connection handling
+io.on('connection', (socket) => {
+  console.log('🔗 Admin connected:', socket.id);
+  
+  // Join admin room for notifications
+  socket.on('join-admin', (token) => {
+    // Verify admin token here if needed
+    socket.join('admin-room');
+    console.log('👨‍💼 Admin joined notification room');
+  });
+
+  socket.on('disconnect', () => {
+    console.log('❌ Admin disconnected:', socket.id);
+  });
+});
+
+// Make io available globally for other modules
+global.io = io;
+
 // Export for Vercel serverless functions
 export default app;
 
 // Start server (both development and production)
 if (!process.env.VERCEL) {
-  app.listen(PORT, () => {
-    console.log(`EcoSoil server running on port ${PORT}`);
+  server.listen(PORT, () => {
+    console.log(`🚀 EcoSoil server running on port ${PORT}`);
+    console.log(`🔌 Socket.io ready for real-time notifications`);
   });
 }

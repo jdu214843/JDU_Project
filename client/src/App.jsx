@@ -17,6 +17,8 @@ import PremiumPage from './pages/PremiumPage'
 import CheckoutPage from './pages/CheckoutPage'
 import PaymentSuccessPage from './pages/PaymentSuccessPage'
 import HelpCenterPage from './pages/HelpCenterPage'
+import AdminLoginPage from './pages/AdminLoginPage'
+import AdminDashboard from './pages/AdminDashboard'
 import ProtectedRoute from './components/ProtectedRoute'
 import NetworkBanner from './components/NetworkBanner'
 import GlobalSnackbar from './components/GlobalSnackbar'
@@ -104,6 +106,11 @@ export default function App() {
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
+        
+        {/* Admin Routes - Outside MainLayout */}
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>
       <GlobalSnackbar />
     </ThemeProvider>

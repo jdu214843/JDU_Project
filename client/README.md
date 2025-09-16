@@ -30,3 +30,4 @@ Structure
 - `src/store/` Zustand stores
 - `src/services/` Axios API client
 - `src/layouts/` Main layout
+# Frontend deployment trigger

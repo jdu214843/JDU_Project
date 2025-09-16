@@ -23,6 +23,25 @@ API Summary
 - Auth: `POST /api/auth/register`, `POST /api/auth/login`
 - Users: `GET /api/users/me`, `PUT /api/users/me`
 - Analyses: `POST /api/analyses` (multipart), `GET /api/analyses`, `GET /api/analyses/:id`
+- Orders: `POST /api/orders` (create order)
+- Admin: `GET /api/admin/orders`, `PUT /api/admin/orders/:id/status`, `GET /api/admin/orders/stats`
+
+Admin Panel
+
+🚀 **New Feature**: Complete admin panel with order management!
+
+- **Access**: `/admin/login` - Default: `admin@ecosoil.uz` / `admin123`
+- **Features**:
+  - 📊 Real-time dashboard with order statistics
+  - 📋 Orders management (view, update status)
+  - 📧 Email notifications to admins on new orders
+  - 🔔 Real-time Socket.io notifications
+  - 📈 Order analytics and recent orders view
+
+**Admin Setup**:
+1. Configure email in `.env` (SMTP settings)
+2. Default admin user created by migration
+3. Access admin panel at `/admin/login`
 
 Uploads
 

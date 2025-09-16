@@ -29,7 +29,8 @@ import {
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { adminApiService } from '../services/admin.api'
-import { io } from 'socket.io-client'
+// Dynamic import for socket.io-client to avoid build issues
+let io = null
 
 function StatCard({ title, value, color = 'primary' }) {
   return (
@@ -232,29 +233,38 @@ export default function AdminDashboard() {
     fetchData()
 
     // Setup socket connection for real-time notifications
-    const socket = io(import.meta.env.VITE_API_BASE || 'http://localhost:4000')
-    
-    socket.on('connect', () => {
-      console.log('🔗 Connected to admin notifications')
-      socket.emit('join-admin', token)
-    })
-
-    socket.on('new-order', (orderData) => {
-      console.log('🔔 New order received:', orderData)
-      setNotification(`Yangi buyurtma: ${orderData.product_name} - ${orderData.customer_name}`)
-      
-      // Refresh data to show new order
-      fetchData()
-      
-      // Play notification sound (optional)
+    const initSocket = async () => {
       try {
-        new Audio('/notification.mp3').play().catch(() => {})
-      } catch (e) {}
-    })
+        const { io } = await import('socket.io-client')
+        const socket = io(import.meta.env.VITE_API_BASE || 'http://localhost:4000')
+        
+        socket.on('connect', () => {
+          console.log('🔗 Connected to admin notifications')
+          socket.emit('join-admin', token)
+        })
 
-    return () => {
-      socket.disconnect()
+        socket.on('new-order', (orderData) => {
+          console.log('🔔 New order received:', orderData)
+          setNotification(`Yangi buyurtma: ${orderData.product_name} - ${orderData.customer_name}`)
+          
+          // Refresh data to show new order
+          fetchData()
+          
+          // Play notification sound (optional)
+          try {
+            new Audio('/notification.mp3').play().catch(() => {})
+          } catch (e) {}
+        })
+
+        return () => {
+          socket.disconnect()
+        }
+      } catch (error) {
+        console.error('Failed to load socket.io-client:', error)
+      }
     }
+    
+    initSocket()
   }, [])
 
   const handleLogout = () => {

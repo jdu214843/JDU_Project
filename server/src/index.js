@@ -21,16 +21,24 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Middleware
+// CORS configuration with support for production environment
+const corsOrigins = process.env.NODE_ENV === 'production' && process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+  : [
+      'http://localhost:5173', // Local development
+      'https://frontend-git-9-deploy-to-vercel-beks-projects-b6aad7c5.vercel.app', // Production frontend
+      /\.vercel\.app$/, // Any Vercel domain
+      /\.onrender\.com$/, // Any Render domain
+      /\.railway\.app$/ // Any Railway domain
+    ];
+
 app.use(cors({
-  origin: [
-    'http://localhost:5173', // Local development
-    'https://frontend-git-9-deploy-to-vercel-beks-projects-b6aad7c5.vercel.app', // Production frontend
-    /\.vercel\.app$/, // Any Vercel domain
-    /\.onrender\.com$/ // Any Render domain
-  ],
+  origin: corsOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -82,12 +90,7 @@ if (process.env.NODE_ENV === 'production') {
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: [
-      'http://localhost:5173',
-      'https://frontend-git-9-deploy-to-vercel-beks-projects-b6aad7c5.vercel.app',
-      /\.vercel\.app$/,
-      /\.onrender\.com$/
-    ],
+    origin: corsOrigins,
     methods: ['GET', 'POST']
   }
 });

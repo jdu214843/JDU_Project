@@ -2,10 +2,14 @@ import axios from 'axios'
 import useAuthStore from '../store/auth'
 import useAppStore from '../store/app'
 
-const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000'
+// Build a robust origin: env override or same-origin fallback
+const ORIGIN = (
+  (import.meta.env.VITE_API_BASE || (typeof window !== 'undefined' ? window.location.origin : ''))
+    ?.replace(/\/$/, '')
+) || 'http://localhost:4000'
 
 export const api = axios.create({
-  baseURL: `${apiBase}/api`,
+  baseURL: `${ORIGIN}/api`,
 })
 
 // Attach token from Zustand store
@@ -120,7 +124,6 @@ export async function getAnalysisHistory(id) {
 
 export function openProgressSSE(id) {
   const token = useAuthStore.getState().token
-  const base = import.meta.env.VITE_API_BASE || 'http://localhost:4000'
-  const url = `${base}/api/analyses/${id}/progress?token=${encodeURIComponent(token || '')}`
+  const url = `${ORIGIN}/api/analyses/${id}/progress?token=${encodeURIComponent(token || '')}`
   return new EventSource(url)
 }

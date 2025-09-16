@@ -29,6 +29,12 @@ import {
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { adminApiService } from '../services/admin.api'
+
+const ORIGIN = (
+  (import.meta.env.VITE_API_BASE || (typeof window !== 'undefined' ? window.location.origin : ''))
+    ?.replace(/\/$/, '')
+) || 'http://localhost:4000'
+
 // Dynamic import for socket.io-client to avoid build issues
 let io = null
 
@@ -233,38 +239,39 @@ export default function AdminDashboard() {
     fetchData()
 
     // Setup socket connection for real-time notifications
-    const initSocket = async () => {
+    let socket
+    ;(async () => {
       try {
-        const { io } = await import('socket.io-client')
-        const socket = io(import.meta.env.VITE_API_BASE || 'http://localhost:4000')
-        
+        const mod = await import('socket.io-client')
+        io = mod.io
+        // Use same-origin or env-based URL
+        socket = io(ORIGIN, { transports: ['websocket', 'polling'] })
+
         socket.on('connect', () => {
-          console.log('🔗 Connected to admin notifications')
-          socket.emit('join-admin', token)
+          console.log('🔗 Admin connected:', socket.id)
+          socket.emit('join_admin')
         })
 
-        socket.on('new-order', (orderData) => {
-          console.log('🔔 New order received:', orderData)
-          setNotification(`Yangi buyurtma: ${orderData.product_name} - ${orderData.customer_name}`)
-          
-          // Refresh data to show new order
-          fetchData()
-          
-          // Play notification sound (optional)
+        socket.on('admin_notification', (payload) => {
+          console.log('📬 Notification received:', payload)
+          setNotification(payload.message)
+
+          // Optionally, play a sound for the notification
           try {
             new Audio('/notification.mp3').play().catch(() => {})
           } catch (e) {}
         })
 
-        return () => {
-          socket.disconnect()
-        }
+        socket.on('disconnect', () => {
+          console.log('❌ Admin disconnected:', socket.id)
+        })
       } catch (error) {
         console.error('Failed to load socket.io-client:', error)
       }
+    })()
+    return () => {
+      if (socket) socket.disconnect()
     }
-    
-    initSocket()
   }, [])
 
   const handleLogout = () => {

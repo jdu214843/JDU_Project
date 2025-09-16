@@ -1,9 +1,12 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:4000'
+const ORIGIN = (
+  (import.meta.env.VITE_API_BASE || (typeof window !== 'undefined' ? window.location.origin : ''))
+    ?.replace(/\/$/, '')
+) || 'http://localhost:4000'
 
 const adminApi = axios.create({
-  baseURL: `${API_BASE_URL}/api/admin`,
+  baseURL: `${ORIGIN}/api/admin`,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -32,7 +35,7 @@ adminApi.interceptors.response.use(
 
 // Auth API
 const authApi = axios.create({
-  baseURL: `${API_BASE_URL}/api/auth`,
+  baseURL: `${ORIGIN}/api/auth`,
   headers: {
     'Content-Type': 'application/json'
   }

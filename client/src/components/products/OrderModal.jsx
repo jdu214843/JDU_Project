@@ -17,6 +17,7 @@ export default function OrderModal({ open, onClose, product }) {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    email: '',
     region: '',
     quantity: 1,
     address: '',
@@ -28,7 +29,7 @@ export default function OrderModal({ open, onClose, product }) {
     setView('form')
     setSubmitting(false)
     setError(null)
-    setFormData({ name: '', phone: '', region: '', quantity: 1, address: '' })
+    setFormData({ name: '', phone: '', email: '', region: '', quantity: 1, address: '' })
   }, [open])
 
   const handleSubmit = async () => {
@@ -39,6 +40,7 @@ export default function OrderModal({ open, onClose, product }) {
         productName: product?.name,
         name: formData.name.trim(),
         phone: formData.phone.trim(),
+        email: formData.email.trim() || null,
         region: formData.region,
         quantity: Number(formData.quantity) || 1,
         address: formData.address.trim(),
@@ -85,6 +87,15 @@ export default function OrderModal({ open, onClose, product }) {
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 fullWidth
+              />
+              <TextField
+                label="Email manzil (ixtiyoriy)"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="example@email.com"
+                fullWidth
+                helperText="Buyurtma holati haqida xabar olish uchun"
               />
               <TextField
                 label={t('order.region')}

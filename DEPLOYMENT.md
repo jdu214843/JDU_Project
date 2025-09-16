@@ -57,15 +57,17 @@ WEB_BASE_URL=${{RAILWAY_STATIC_URL}}
 ```
 NODE_ENV=production
 PORT=4000
-DATABASE_URL=postgresql://user:pass@host:5432/db
+DATABASE_URL=postgresql://neondb_owner:npg_gOS7txQwr2zI@ep-proud-fog-a1l7a4vu-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+
 JWT_SECRET=very_secure_secret_key
 STRIPE_SECRET_KEY=sk_live_...
-WEB_BASE_URL=https://yourdomain.com
+WEB_BASE_URL=https://ecosoiljdu-frontend.vercel.app
+
 ```
 
 ### Frontend (.env):
 ```
-VITE_API_BASE=https://api.yourdomain.com
+VITE_API_BASE=https://ecosoiljdu-backend.onrender.com
 ```
 
 ## Database Setup

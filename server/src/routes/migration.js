@@ -46,7 +46,26 @@ router.post('/run', async (req, res) => {
         chemical_properties JSONB,
         recommendations JSONB,
         completed_at TIMESTAMPTZ
-      )`
+      )`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user'`,
+      `CREATE TABLE IF NOT EXISTS orders (
+        id UUID PRIMARY KEY,
+        customer_name VARCHAR(255) NOT NULL,
+        customer_email VARCHAR(255),
+        phone VARCHAR(50),
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
+      `INSERT INTO users (id, full_name, email, password_hash, role, created_at) 
+       VALUES (
+         gen_random_uuid(),
+         'System Administrator', 
+         'admin@ecosoil.uz', 
+         '$2a$10$oTuccVEnpVEOgbqjTG8kYuYMVEEi/4zi0JJ3pKwEqMxTTB22bpcpq',
+         'admin',
+         NOW()
+       ) ON CONFLICT (email) DO NOTHING`
     ];
     
     console.log(`Executing ${migrations.length} migration statements...`);

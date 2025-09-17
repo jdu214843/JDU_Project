@@ -79,8 +79,27 @@ app.use('/api/public', publicRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Health
-app.get('/api/health', (req, res) => {
-  res.json({ ok: true });
+app.get('/api/health', async (req, res) => {
+  try {
+    // Test database connection
+    const { query } = await import('./db/index.js');
+    await query('SELECT 1');
+    res.json({ 
+      ok: true, 
+      database: 'connected',
+      env: process.env.NODE_ENV,
+      dbUrlExists: !!process.env.DATABASE_URL
+    });
+  } catch (err) {
+    console.error('Health check failed:', err);
+    res.status(500).json({ 
+      ok: false, 
+      database: 'disconnected',
+      env: process.env.NODE_ENV,
+      dbUrlExists: !!process.env.DATABASE_URL,
+      error: err.message
+    });
+  }
 });
 
 // Catch all handler for React Router (production only)

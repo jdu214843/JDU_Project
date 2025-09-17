@@ -23,8 +23,13 @@ export async function register(req, res) {
     const token = signToken(userId)
     res.status(201).json({ token, user: { id: userId, fullName, email: email.toLowerCase() } })
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Registration failed' })
+    console.error('Registration error:', err)
+    console.error('DATABASE_URL exists:', !!process.env.DATABASE_URL)
+    console.error('NODE_ENV:', process.env.NODE_ENV)
+    res.status(500).json({ 
+      error: 'Registration failed',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    })
   }
 }
 
@@ -40,7 +45,11 @@ export async function login(req, res) {
     const token = signToken(user.id)
     res.json({ token, user: { id: user.id, fullName: user.full_name, email: user.email } })
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Login failed' })
+    console.error('Login error:', err)
+    console.error('DATABASE_URL exists:', !!process.env.DATABASE_URL)
+    res.status(500).json({ 
+      error: 'Login failed',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    })
   }
 }

@@ -28,6 +28,7 @@ const corsOrigins = process.env.NODE_ENV === 'production' && process.env.CORS_OR
       'http://localhost:5173', // Local development
       'https://frontend-git-9-deploy-to-vercel-beks-projects-b6aad7c5.vercel.app', // Old production frontend
       'https://client-4vzhywq1u-beks-projects-b6aad7c5.vercel.app', // New production frontend
+      'https://client-8rm5pmimw-beks-projects-b6aad7c5.vercel.app', // Latest production frontend
       /\.vercel\.app$/, // Any Vercel domain
       /\.onrender\.com$/, // Any Render domain
       /\.railway\.app$/ // Any Railway domain

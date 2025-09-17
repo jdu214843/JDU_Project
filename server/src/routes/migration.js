@@ -18,14 +18,20 @@ router.post('/run', async (req, res) => {
     const statements = migrationSQL
       .split(';')
       .map(stmt => stmt.trim())
-      .filter(stmt => stmt.length > 0);
+      .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
     
     console.log(`Executing ${statements.length} migration statements...`);
     
     for (const statement of statements) {
-      if (statement.startsWith('--') || statement.length === 0) continue;
+      if (statement.length === 0) continue;
       console.log(`Executing: ${statement.substring(0, 100)}...`);
-      await query(statement);
+      try {
+        await query(statement);
+        console.log('✓ Success');
+      } catch (err) {
+        console.log(`✗ Error: ${err.message}`);
+        // Continue with next statement for idempotent operations
+      }
     }
     
     res.json({ 

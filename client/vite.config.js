@@ -12,4 +12,17 @@ export default defineConfig({
     host: true, // listen on 0.0.0.0 for LAN access
     port: 5173,
   },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          mui: ['@mui/material', '@mui/icons-material'],
+        }
+      }
+    }
+  },
+  base: './',
 })

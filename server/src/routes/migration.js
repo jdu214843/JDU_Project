@@ -13,6 +13,8 @@ router.post('/run', async (req, res) => {
   try {
     // Hardcode the essential table creation
     const migrations = [
+      'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"',
+      'CREATE EXTENSION IF NOT EXISTS "pgcrypto"',
       `CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY,
         full_name VARCHAR(255) NOT NULL,

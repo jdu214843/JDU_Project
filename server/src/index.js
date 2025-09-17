@@ -26,16 +26,18 @@ const corsOrigins = process.env.NODE_ENV === 'production' && process.env.CORS_OR
   ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
   : [
       'http://localhost:5173', // Local development
+      'http://localhost:3000', // Local development alternative
       'https://frontend-git-9-deploy-to-vercel-beks-projects-b6aad7c5.vercel.app', // Old production frontend
       'https://client-4vzhywq1u-beks-projects-b6aad7c5.vercel.app', // New production frontend
       'https://client-8rm5pmimw-beks-projects-b6aad7c5.vercel.app', // Latest production frontend
-      /\.vercel\.app$/, // Any Vercel domain
-      /\.onrender\.com$/, // Any Render domain
-      /\.railway\.app$/ // Any Railway domain
+      /^https:\/\/.*\.vercel\.app$/, // Any Vercel domain (regex fixed)
+      /^https:\/\/.*\.onrender\.com$/, // Any Render domain (regex fixed)
+      /^https:\/\/.*\.railway\.app$/, // Any Railway domain (regex fixed)
+      /^https:\/\/.*\.netlify\.app$/ // Any Netlify domain
     ];
 
 app.use(cors({
-  origin: corsOrigins,
+  origin: true, // Allow all origins temporarily
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

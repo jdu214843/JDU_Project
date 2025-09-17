@@ -13,6 +13,7 @@ import orderRoutes from './routes/orders.js';
 import subscriptionRoutes from './routes/subscriptions.js';
 import publicRoutes from './routes/public.js';
 import adminRoutes from './routes/admin.js';
+import migrationRoutes from './routes/migration.js';
 
 // Load env
 dotenv.config();
@@ -77,6 +78,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/migrations', migrationRoutes);
 
 // Health
 app.get('/api/health', async (req, res) => {

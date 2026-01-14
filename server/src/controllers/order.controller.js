@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import { query } from '../db/index.js'
+import { getClient, query } from '../db/index.js'
 import { notifyNewOrder, notifyOrderStatusUpdate } from '../services/email.service.js'
 
 export async function createOrder(req, res) {
@@ -35,10 +35,14 @@ export async function createOrder(req, res) {
     
     // Send real-time notification to admin dashboard
     if (global.io) {
-      global.io.to('admin-room').emit('new-order', {
+      const notificationPayload = {
         ...orderData,
-        created_at: new Date().toISOString()
-      });
+        message: 'Yangi buyurtma keldi!',
+        timestamp: new Date().toISOString()
+      };
+      global.io.to('admin-room').emit('new-order', notificationPayload);
+      // Backward-compatible event name
+      global.io.to('admin-room').emit('admin_notification', notificationPayload);
       console.log('🔔 Real-time notification sent to admins');
     }
 
@@ -46,15 +50,6 @@ export async function createOrder(req, res) {
     notifyNewOrder(orderData).catch(err => 
       console.error('Failed to send admin notification:', err)
     )
-
-    // Real-time notification to admin panel
-    if (global.io) {
-      global.io.to('admin-room').emit('new-order', {
-        ...orderData,
-        message: 'Yangi buyurtma keldi!',
-        timestamp: new Date().toISOString()
-      })
-    }
 
     res.status(201).json({ success: true, message: 'Order received' })
   } catch (err) {
@@ -101,6 +96,7 @@ export async function getAllOrders(req, res) {
 }
 
 export async function updateOrderStatus(req, res) {
+  const client = await getClient()
   try {
     const { id } = req.params
     const { status, notes } = req.body
@@ -110,7 +106,15 @@ export async function updateOrderStatus(req, res) {
       return res.status(400).json({ error: 'Invalid status' })
     }
 
-    const result = await query(
+    await client.query('BEGIN')
+    const existing = await client.query('SELECT status FROM orders WHERE id = $1', [id])
+    if (existing.rowCount === 0) {
+      await client.query('ROLLBACK')
+      return res.status(404).json({ error: 'Order not found' })
+    }
+    const oldStatus = existing.rows[0].status
+
+    const result = await client.query(
       `UPDATE orders 
        SET status = $1, updated_at = NOW()
        WHERE id = $2
@@ -118,23 +122,19 @@ export async function updateOrderStatus(req, res) {
       [status, id]
     )
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Order not found' })
-    }
-
-    // Log status change
-    await query(
+    await client.query(
       `INSERT INTO order_logs (id, order_id, admin_id, action, old_status, new_status, notes, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-      [uuidv4(), id, req.admin.id, 'status_change', result.rows[0].status, status, notes || null]
+      [uuidv4(), id, req.admin.id, 'status_change', oldStatus, status, notes || null]
     )
+    await client.query('COMMIT')
 
     // Get updated order with all fields for email notification
     const orderResult = await query(
       'SELECT * FROM orders WHERE id = $1',
       [id]
     )
-    
+
     // Send email notification to customer (if email available)
     const updatedOrder = orderResult.rows[0]
     notifyOrderStatusUpdate(updatedOrder, status).catch(err =>
@@ -143,8 +143,11 @@ export async function updateOrderStatus(req, res) {
 
     res.json({ success: true, order: result.rows[0] })
   } catch (err) {
+    try { await client.query('ROLLBACK') } catch {}
     console.error('Update order error:', err)
     res.status(500).json({ error: 'Failed to update order' })
+  } finally {
+    client.release()
   }
 }
 
@@ -177,4 +180,3 @@ export async function getOrderStats(req, res) {
     res.status(500).json({ error: 'Failed to fetch statistics' })
   }
 }
-

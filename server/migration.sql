@@ -1,5 +1,8 @@
 -- EcoSoil single-file migration (psql)
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY,
   full_name VARCHAR(255) NOT NULL,
@@ -20,6 +23,7 @@ CREATE TABLE IF NOT EXISTS analyses (
   crop_type VARCHAR(100),
   irrigation_method VARCHAR(100),
   observations TEXT,
+  last_harvest_date TIMESTAMPTZ,
   submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -32,6 +36,10 @@ CREATE TABLE IF NOT EXISTS analysis_results (
   soil_composition JSONB,
   chemical_properties JSONB,
   recommendations JSONB,
+  ai_confidence DECIMAL,
+  risk_level VARCHAR(100),
+  affected_area_percentage DECIMAL,
+  health_score DECIMAL,
   completed_at TIMESTAMPTZ
 );
 
@@ -40,6 +48,20 @@ CREATE TABLE IF NOT EXISTS analysis_images (
   analysis_id UUID NOT NULL REFERENCES analyses(id) ON DELETE CASCADE,
   image_url VARCHAR(1024) NOT NULL,
   uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+  id UUID PRIMARY KEY,
+  product_name VARCHAR(255) NOT NULL,
+  customer_name VARCHAR(255) NOT NULL,
+  phone_number VARCHAR(100) NOT NULL,
+  region VARCHAR(255) NOT NULL,
+  quantity INTEGER NOT NULL CHECK (quantity > 0),
+  address TEXT NOT NULL,
+  status VARCHAR(50) NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  customer_email VARCHAR(255)
 );
 
 CREATE INDEX IF NOT EXISTS idx_analyses_user_id ON analyses(user_id);
@@ -51,6 +73,19 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS region VARCHAR(255);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT '{"notifications":{"email":true,"sms":false,"marketing":true},"language":"uz"}';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user';
+
+-- Analyses extra fields (idempotent)
+ALTER TABLE analyses ADD COLUMN IF NOT EXISTS last_harvest_date TIMESTAMPTZ;
+ALTER TABLE analyses ADD COLUMN IF NOT EXISTS share_token TEXT;
+ALTER TABLE analyses ADD COLUMN IF NOT EXISTS share_enabled BOOLEAN DEFAULT false;
+ALTER TABLE analyses ADD COLUMN IF NOT EXISTS report_pdf_url TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_analyses_share_token ON analyses(share_token) WHERE share_token IS NOT NULL;
+
+-- Analysis results extra fields (idempotent)
+ALTER TABLE analysis_results ADD COLUMN IF NOT EXISTS ai_confidence DECIMAL;
+ALTER TABLE analysis_results ADD COLUMN IF NOT EXISTS risk_level VARCHAR(100);
+ALTER TABLE analysis_results ADD COLUMN IF NOT EXISTS affected_area_percentage DECIMAL;
+ALTER TABLE analysis_results ADD COLUMN IF NOT EXISTS health_score DECIMAL;
 
 -- Create admin users table for admin-specific info
 CREATE TABLE IF NOT EXISTS admin_users (
@@ -86,6 +121,15 @@ CREATE TABLE IF NOT EXISTS notifications (
   order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
   sent_at TIMESTAMPTZ DEFAULT NOW(),
   status VARCHAR(50) DEFAULT 'sent'
+);
+
+-- Create subscriptions table
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id UUID PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  plan_id VARCHAR(100) NOT NULL,
+  status VARCHAR(50) NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Insert default admin user (password: admin123)

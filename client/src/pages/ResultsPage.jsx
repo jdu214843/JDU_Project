@@ -193,7 +193,7 @@ export default function ResultsPage() {
           </Stack>
           {shareEnabled && (
             <>
-              <TextField fullWidth label="{t('share.link')}" value={webShare} InputProps={{ readOnly: true }} sx={{ mb: 1 }} />
+              <TextField fullWidth label={t('share.link')} value={webShare} InputProps={{ readOnly: true }} sx={{ mb: 1 }} />
               <Button onClick={copyToClipboard}>{t('share.copy')}</Button>
             </>
           )}

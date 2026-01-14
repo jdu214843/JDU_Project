@@ -73,6 +73,7 @@ export const translations = {
       new: 'Yangi tahlil',
       pdf: 'PDF yuklab olish',
       share: 'Ulashish',
+      helpers: { salinity: '0–5% oraliq', ph: 'pH 0–14 shkalasi', moisture: '0–100% oraliq' },
     },
     dashboard: {
       tabs: ['Profil', 'Tarix', 'Sozlamalar', 'Maxfiylik'],
@@ -217,7 +218,7 @@ export const translations = {
     composition: { title: 'Soil composition', chemicalTitle: 'Chemical properties', element: 'Element', amount: 'Amount', status: 'Status', none: 'No chemical data', sand: 'Sand', clay: 'Clay', silt: 'Silt' },
     history: { title: 'Salinity dynamics', subtitle: 'Last 4 months changes', none: 'No history found' },
     share: { title: 'Share report', enable: 'Enable sharing', enabled: 'Sharing enabled', disable: 'Disable', link: 'Share link', copy: 'Copy link', note: 'Anyone with the link can view this report.' },
-    results: { done: 'Analysis Completed!', summary: 'Summary', recommendations: 'Recommendations', detail: 'Detailed Report', new: 'New Analysis', pdf: 'Download PDF', share: 'Share' },
+    results: { done: 'Analysis Completed!', summary: 'Summary', recommendations: 'Recommendations', detail: 'Detailed Report', new: 'New Analysis', pdf: 'Download PDF', share: 'Share', helpers: { salinity: 'Range 0–5%', ph: 'pH scale 0–14', moisture: 'Range 0–100%' } },
     dashboard: { tabs: ['Profile', 'History', 'Settings', 'Privacy'], farmer: 'Farmer', loadError: 'Failed to load dashboard data' },
     profile: { title: 'Profile Information', email: 'Email', phone: 'Phone Number', region: 'Select your region', bio: 'Bio', save: 'Save', saving: 'Saving...', saved: 'Profile updated', fullName: 'Full Name' },
     settings: { saved: 'Settings saved', email: 'Email notifications', sms: 'SMS notifications', marketing: 'Marketing messages', language: 'Language', save: 'Save', saving: 'Saving...' },

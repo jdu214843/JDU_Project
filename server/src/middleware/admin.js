@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { query } from '../db/index.js'
+import { config } from '../config.js'
 
 export const authenticateAdmin = async (req, res, next) => {
   try {
@@ -8,7 +9,7 @@ export const authenticateAdmin = async (req, res, next) => {
       return res.status(401).json({ error: 'Admin access token required' })
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key')
+    const decoded = jwt.verify(token, config.jwtSecret)
     const userId = decoded.userId || decoded.sub
     const result = await query(
       'SELECT id, full_name, email, role FROM users WHERE id = $1 AND role IN ($2, $3)',

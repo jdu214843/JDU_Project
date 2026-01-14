@@ -37,8 +37,20 @@ const corsOrigins = process.env.NODE_ENV === 'production' && process.env.CORS_OR
       /^https:\/\/.*\.netlify\.app$/ // Any Netlify domain
     ];
 
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  return corsOrigins.some((allowed) => {
+    if (typeof allowed === 'string') return allowed === origin;
+    if (allowed instanceof RegExp) return allowed.test(origin);
+    return false;
+  });
+};
+
 app.use(cors({
-  origin: true, // Allow all origins temporarily
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -125,10 +137,18 @@ io.on('connection', (socket) => {
   console.log('🔗 Admin connected:', socket.id);
   
   // Join admin room for notifications
-  socket.on('join-admin', (token) => {
-    // Verify admin token here if needed
+  const joinAdminRoom = () => {
     socket.join('admin-room');
     console.log('👨‍💼 Admin joined notification room');
+  };
+
+  socket.on('join-admin', () => {
+    // Verify admin token here if needed
+    joinAdminRoom();
+  });
+  socket.on('join_admin', () => {
+    // Backward-compatible event name
+    joinAdminRoom();
   });
 
   socket.on('disconnect', () => {

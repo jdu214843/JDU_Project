@@ -10,8 +10,8 @@ const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
 const stripePromise = publishableKey ? loadStripe(publishableKey) : null
 
 const PLANS = {
-  starter: { id: 'starter', name: 'Starter', price: "500,000 so'm/oy", amount: 500000 },
-  professional: { id: 'professional', name: 'Pro', price: "1,200,000 so'm/oy", amount: 1200000 },
+  starter: { id: 'starter', name: 'Starter', price: '10 USD/oy', amount: 1000 },
+  professional: { id: 'professional', name: 'Pro', price: '20 USD/oy', amount: 2000 },
   enterprise: { id: 'enterprise', name: 'Enterprise', price: 'Aloqa qiling', amount: 0 },
 }
 

@@ -13,8 +13,8 @@ const FEATURES = [
 ]
 
 const TARIFFS = [
-  { id: 'starter', name: 'Starter', price: "500,000 so'm/oy", features: ['1 ta sensor', 'Asosiy tavsiyalar'] },
-  { id: 'professional', name: 'Pro', price: "1,200,000 so'm/oy", features: ['3 ta sensor', 'AI tahlil', '24/7 qo\'llab-quvvatlash'] },
+  { id: 'starter', name: 'Starter', price: '10 USD/oy', features: ['1 ta sensor', 'Asosiy tavsiyalar'] },
+  { id: 'professional', name: 'Pro', price: '20 USD/oy', features: ['3 ta sensor', 'AI tahlil', '24/7 qo\'llab-quvvatlash'] },
   { id: 'enterprise', name: 'Enterprise', price: 'Aloqa qiling', features: ['10+ sensor', 'API kirish', 'Maxsus tavsiyalar'] },
 ]
 
@@ -93,4 +93,3 @@ export default function PremiumPage() {
     </Container>
   )
 }
-

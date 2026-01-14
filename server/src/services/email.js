@@ -33,7 +33,7 @@ export async function sendMail({ to, subject, text, html }) {
 
 export function buildAnalysisReportEmail({ user, analysis, result }) {
   const pretty = (v, unit = '') => (v == null ? '-' : `${v}${unit}`)
-  const webUrl = config.webBaseUrl ? `${config.webBaseUrl}/analysis/${analysis.id}` : ''
+  const webUrl = config.webBaseUrl ? `${config.webBaseUrl}/analyses/${analysis.id}` : ''
   const subject = `EcoSoil: Analiz hisobot tayyor — ${analysis.location || 'maydon'}`
   const text = `Assalomu alaykum, ${user.full_name || user.fullName || ''}!
 
@@ -88,4 +88,3 @@ function escapeHtml(s) {
 function escapeAttr(s) {
   return escapeHtml(s).replace(/"/g, '&quot;')
 }
-

@@ -15,8 +15,8 @@ export async function createAnalysis(req, res) {
     await client.query('BEGIN')
     const analysisId = uuidv4()
     await client.query(
-      `INSERT INTO analyses (id, user_id, status, location, area, soil_type, crop_type, irrigation_method, observations, submitted_at)
-       VALUES ($1, $2, 'processing', $3, $4, $5, $6, $7, $8, NOW())`,
+      `INSERT INTO analyses (id, user_id, status, location, area, soil_type, crop_type, irrigation_method, observations, last_harvest_date, submitted_at)
+       VALUES ($1, $2, 'processing', $3, $4, $5, $6, $7, $8, $9, NOW())`,
       [
         analysisId,
         userId,
@@ -26,6 +26,7 @@ export async function createAnalysis(req, res) {
         cropType || null,
         irrigationMethod || null,
         observations || null,
+        lastHarvestDate || null,
       ]
     )
 
@@ -122,7 +123,7 @@ export async function createAnalysis(req, res) {
 export async function listAnalyses(req, res) {
   try {
     const result = await query(
-      `SELECT a.id, a.status, a.location, a.area, a.soil_type, a.crop_type, a.irrigation_method, a.submitted_at,
+      `SELECT a.id, a.status, a.location, a.area, a.soil_type, a.crop_type, a.irrigation_method, a.last_harvest_date, a.submitted_at,
               ar.salinity_level, ar.ph_level, ar.moisture_percentage, ar.health_score
        FROM analyses a
        LEFT JOIN analysis_results ar ON ar.analysis_id = a.id

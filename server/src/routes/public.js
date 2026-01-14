@@ -10,7 +10,7 @@ router.get('/analyses/:id', async (req, res) => {
     const { token } = req.query
     if (!token) return res.status(400).json({ error: 'Missing token' })
     const a = await query(
-      `SELECT a.id, a.location, a.area, a.soil_type, a.crop_type, a.irrigation_method, a.submitted_at,
+      `SELECT a.id, a.location, a.area, a.soil_type, a.crop_type, a.irrigation_method, a.last_harvest_date, a.submitted_at,
               a.share_enabled, a.share_token,
               ar.salinity_level, ar.ph_level, ar.moisture_percentage,
               ar.soil_composition, ar.chemical_properties, ar.recommendations,
@@ -37,7 +37,7 @@ router.get('/analyses/:id/report.pdf', async (req, res) => {
     const { token } = req.query
     if (!token) return res.status(400).json({ error: 'Missing token' })
     const a = await query(
-      `SELECT a.id, a.location, a.submitted_at, a.share_enabled, a.share_token,
+      `SELECT a.id, a.location, a.last_harvest_date, a.submitted_at, a.share_enabled, a.share_token,
               ar.salinity_level, ar.ph_level, ar.moisture_percentage,
               ar.soil_composition, ar.chemical_properties, ar.recommendations,
               ar.ai_confidence, ar.risk_level, ar.affected_area_percentage
@@ -60,4 +60,3 @@ router.get('/analyses/:id/report.pdf', async (req, res) => {
 })
 
 export default router
-

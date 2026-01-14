@@ -208,6 +208,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate()
   const [tabValue, setTabValue] = useState(0)
   const [stats, setStats] = useState(null)
+  const [recentOrders, setRecentOrders] = useState([])
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -222,6 +223,7 @@ export default function AdminDashboard() {
       ])
       
       setStats(statsData.stats)
+      setRecentOrders(statsData.recent_orders || [])
       setOrders(ordersData.orders)
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load data')
@@ -249,12 +251,15 @@ export default function AdminDashboard() {
 
         socket.on('connect', () => {
           console.log('🔗 Admin connected:', socket.id)
-          socket.emit('join_admin')
+          const token = localStorage.getItem('adminToken')
+          socket.emit('join-admin', token)
         })
 
-        socket.on('admin_notification', (payload) => {
+        socket.on('new-order', (payload) => {
           console.log('📬 Notification received:', payload)
-          setNotification(payload.message)
+          const message = payload?.message || 'Yangi buyurtma keldi!'
+          setNotification(message)
+          fetchData()
 
           // Optionally, play a sound for the notification
           try {
@@ -322,7 +327,7 @@ export default function AdminDashboard() {
         {tabValue === 0 && (
           <DashboardTab 
             stats={stats}
-            recentOrders={stats?.recent_orders}
+            recentOrders={recentOrders}
             onRefresh={() => fetchData()}
           />
         )}

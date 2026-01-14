@@ -1,32 +1,48 @@
 import nodemailer from 'nodemailer'
 import crypto from 'crypto'
 import { query } from '../db/index.js'
+import { config } from '../config.js'
 
-// Create email transporter
-const createTransporter = () => {
-  // Gmail yoki boshqa SMTP server uchun
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: process.env.SMTP_PORT || 587,
-    secure: false, // true for 465, false for other ports
+// Cache transporter to avoid reconnecting on every email
+let transporter = null
+
+const getTransporter = () => {
+  if (transporter) return transporter
+  if (!config.smtpHost || !config.smtpUser || !config.smtpPass) return null
+
+  transporter = nodemailer.createTransport({
+    host: config.smtpHost,
+    port: config.smtpPort || 587,
+    secure: (config.smtpPort || 587) === 465, // SSL for 465
     auth: {
-      user: process.env.SMTP_USER || 'your-email@gmail.com',
-      pass: process.env.SMTP_PASS || 'your-app-password'
+      user: config.smtpUser,
+      pass: config.smtpPass
     }
   })
+
+  return transporter
 }
 
 // Get admin emails from database
 const getAdminEmails = async () => {
+  // Start with .env fallbacks in case the DB has no admin/staff rows yet
+  const fromEnv = []
+  if (process.env.ADMIN_EMAIL) fromEnv.push(process.env.ADMIN_EMAIL)
+  if (process.env.STAFF_EMAILS) {
+    process.env.STAFF_EMAILS.split(',').map((e) => e.trim()).filter(Boolean).forEach((e) => fromEnv.push(e))
+  }
+
   try {
     const result = await query(
       'SELECT email FROM users WHERE role IN ($1, $2) AND email IS NOT NULL',
       ['admin', 'staff']
     )
-    return result.rows.map(row => row.email)
+    const dbEmails = result.rows.map(row => row.email)
+    // Merge and de-duplicate env + DB emails
+    return Array.from(new Set([...fromEnv, ...dbEmails])).filter(Boolean)
   } catch (error) {
     console.error('Error getting admin emails:', error)
-    return []
+    return Array.from(new Set(fromEnv)).filter(Boolean)
   }
 }
 
@@ -34,16 +50,15 @@ const getAdminEmails = async () => {
 export const notifyNewOrder = async (orderData) => {
   try {
     // Skip email if SMTP not configured
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    const transporter = getTransporter()
+    if (!transporter) {
       console.log('📧 SMTP not configured, skipping email notification')
       return
     }
-
-    const transporter = createTransporter()
     const adminEmails = await getAdminEmails()
     
     if (adminEmails.length === 0) {
-      console.log('No admin emails found for notification')
+      console.log('No admin emails found for notification (checked DB + env)')
       return
     }
 
@@ -78,16 +93,16 @@ export const notifyNewOrder = async (orderData) => {
     `
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || 'noreply@ecosoil.uz',
+      from: config.smtpFrom || 'noreply@ecosoil.uz',
       to: adminEmails.join(', '),
       subject: `🛒 Yangi Buyurtma - ${orderData.product_name}`,
       html: emailTemplate
     }
 
-    await transporter.sendMail(mailOptions)
-    console.log('✅ Admin notification sent successfully')
-    
-        // Log notification
+    const info = await transporter.sendMail(mailOptions)
+    console.log('✅ Admin notification sent successfully', { to: mailOptions.to, messageId: info?.messageId })
+
+    // Log notification
     await query(
       'INSERT INTO notifications (id, type, recipient_emails, order_id, sent_at) VALUES ($1, $2, $3, $4, NOW())',
       [
@@ -99,7 +114,7 @@ export const notifyNewOrder = async (orderData) => {
     )
     
   } catch (error) {
-    console.error('❌ Error sending admin notification:', error)
+    console.error('❌ Error sending admin notification:', error?.message || error)
   }
 }
 
@@ -114,14 +129,13 @@ export const notifyOrderStatusUpdate = async (orderData, newStatus) => {
       return
     }
 
+    const transporter = getTransporter()
     // Skip email if SMTP not configured
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    if (!transporter) {
       console.log('❌ SMTP not configured for status updates')
       return
     }
-
-    console.log('📧 SMTP configured, creating transporter...')
-    const transporter = createTransporter()
+    console.log('📧 SMTP configured, ready to send')
     
     const statusTexts = {
       confirmed: 'Tasdiqlandi ✅',
@@ -149,22 +163,22 @@ export const notifyOrderStatusUpdate = async (orderData, newStatus) => {
         <p><strong>Miqdor:</strong> ${orderData.quantity} dona</p>
       </div>
       
-      <p style="margin-top: 20px;">Savollar bo'lsa, biz bilan bog'laning: +998 90 123 45 67</p>
+      <p style="margin-top: 20px;">Savollar bo'lsa, biz bilan bog'laning: +998 91 582 71 71</p>
     </div>
     `
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || 'noreply@ecosoil.uz',
+      from: config.smtpFrom || 'noreply@ecosoil.uz',
       to: orderData.customer_email,
       subject: `Buyurtma yangilandi - ${orderData.product_name}`,
       html: emailTemplate
     }
 
     console.log('📤 Sending email with options:', { to: mailOptions.to, subject: mailOptions.subject })
-    await transporter.sendMail(mailOptions)
-    console.log('✅ Customer notification sent successfully!')
+    const info = await transporter.sendMail(mailOptions)
+    console.log('✅ Customer notification sent successfully!', { messageId: info?.messageId })
     
   } catch (error) {
-    console.error('❌ Error sending customer notification:', error)
+    console.error('❌ Error sending customer notification:', error?.message || error)
   }
 }
